@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<title>Ayuda-Memoria · Gaby</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#141b2e; --panel2:#1b2540; --line:#26304d;
+    --txt:#eaf0ff; --mut:#93a1c4; --acc:#2dd4bf; --acc2:#0f766e;
+    --serv:#38bdf8; --mail:#a78bfa; --ped:#fbbf24; --pers:#f472b6; --ok:#34d399;
+    --danger:#fb7185;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:linear-gradient(180deg,#0b1020,#0e1428);
+    color:var(--txt); min-height:100vh; padding:16px; padding-bottom:120px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  header h1{font-size:1.25rem;margin:0;letter-spacing:.3px}
+  header .sub{color:var(--mut);font-size:.78rem}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px}
+  label{font-size:.8rem;color:var(--mut);display:block;margin-bottom:6px}
+  textarea,input,select,button{font-family:inherit;font-size:1rem}
+  textarea{
+    width:100%;min-height:60px;resize:vertical;border-radius:12px;
+    border:1px solid var(--line);background:var(--panel2);color:var(--txt);padding:12px;
+  }
+  .cats{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+  .catbtn{
+    border:1px solid var(--line);background:var(--panel2);color:var(--txt);
+    padding:8px 12px;border-radius:999px;cursor:pointer;font-size:.85rem;transition:.15s;
+  }
+  .catbtn.active{color:#06121a;font-weight:700}
+  .catbtn[data-c="Servicio"].active{background:var(--serv);border-color:var(--serv)}
+  .catbtn[data-c="Mails"].active{background:var(--mail);border-color:var(--mail)}
+  .catbtn[data-c="Pedidos"].active{background:var(--ped);border-color:var(--ped)}
+  .catbtn[data-c="Personal"].active{background:var(--pers);border-color:var(--pers)}
+  .row{display:flex;gap:8px;align-items:center}
+  .grow{flex:1}
+  button.primary{
+    background:linear-gradient(135deg,var(--acc),var(--acc2));color:#04121a;border:none;
+    padding:12px 16px;border-radius:12px;font-weight:700;cursor:pointer;
+  }
+  button.ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line);padding:12px;border-radius:12px;cursor:pointer}
+  .mic{width:52px;height:52px;border-radius:50%;border:none;background:var(--panel2);border:1px solid var(--line);
+    color:var(--acc);font-size:1.4rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .mic.rec{background:var(--danger);color:#111;animation:pulse 1s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(251,113,133,.6)}70%{box-shadow:0 0 0 14px rgba(251,113,133,0)}100%{box-shadow:0 0 0 0 rgba(251,113,133,0)}}
+  .tabs{display:flex;gap:8px;margin-bottom:12px}
+  .tab{flex:1;text-align:center;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--panel);cursor:pointer;color:var(--mut);font-weight:600}
+  .tab.active{background:var(--panel2);color:var(--txt);border-color:var(--acc)}
+  .group-title{font-size:.8rem;text-transform:uppercase;letter-spacing:1px;color:var(--mut);margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .dot.Servicio{background:var(--serv)} .dot.Mails{background:var(--mail)} .dot.Pedidos{background:var(--ped)} .dot.Personal{background:var(--pers)}
+  .item{display:flex;align-items:flex-start;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+  .item .txt{flex:1;line-height:1.35}
+  .item .meta{font-size:.72rem;color:var(--mut);margin-top:4px}
+  .check{width:30px;height:30px;border-radius:8px;border:2px solid var(--acc);background:transparent;color:var(--acc);cursor:pointer;font-size:1rem;flex:none}
+  .del{background:transparent;border:none;color:var(--mut);cursor:pointer;font-size:1.1rem;flex:none}
+  .done .txt{text-decoration:line-through;color:var(--mut)}
+  .settings-grid{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+  .settings-grid .fld{flex:1;min-width:120px}
+  input[type=number]{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--txt)}
+  .switch{display:flex;align-items:center;gap:8px;color:var(--txt);font-size:.9rem;cursor:pointer}
+  .empty{color:var(--mut);text-align:center;padding:20px;font-size:.9rem}
+  .banner{background:var(--acc2);color:#eafff9;border-radius:10px;padding:8px 12px;font-size:.8rem;margin-bottom:10px;display:none}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ok);color:#04120c;
+    padding:12px 20px;border-radius:999px;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,.4);opacity:0;transition:.3s;z-index:50}
+  .toast.show{opacity:1}
+  .foot{color:var(--mut);font-size:.72rem;text-align:center;margin-top:20px;line-height:1.5}
+  .pill{font-size:.7rem;background:var(--panel2);border:1px solid var(--line);color:var(--mut);padding:2px 8px;border-radius:999px}
+</style>
+</head>
+<body>
+<header>
+  <div style="font-size:1.8rem">🧠</div>
+  <div>
+    <h1>Ayuda-Memoria</h1>
+    <div class="sub">Anotá · Clasificá · Que te insista · Listo ✅</div>
+  </div>
+</header>
+
+<div id="banner" class="banner"></div>
+
+<!-- ENTRADA -->
+<div class="card">
+  <label>¿Qué falta hacer?</label>
+  <div class="row">
+    <textarea id="entrada" class="grow" placeholder="Escribí o tocá el micrófono para dictar…"></textarea>
+    <button id="micBtn" class="mic" title="Dictar por voz">🎤</button>
+  </div>
+  <div class="cats" id="cats">
+    <button class="catbtn active" data-c="Servicio">🛠 Servicio</button>
+    <button class="catbtn" data-c="Mails">✉️ Mails</button>
+    <button class="catbtn" data-c="Pedidos">📦 Pedidos</button>
+    <button class="catbtn" data-c="Personal">🌸 Personal</button>
+  </div>
+  <button id="addBtn" class="primary" style="width:100%">＋ Agregar a pendientes</button>
+</div>
+
+<!-- CONFIG -->
+<div class="card">
+  <div class="settings-grid">
+    <div class="fld">
+      <label>Recordarme cada (min)</label>
+      <input type="number" id="intervalo" min="1" value="10">
+    </div>
+    <div class="fld" style="flex:none">
+      <label>&nbsp;</label>
+      <button id="toggleRec" class="ghost">⏰ Activar avisos</button>
+    </div>
+    <div class="fld" style="flex:none">
+      <label>&nbsp;</label>
+      <label class="switch"><input type="checkbox" id="vozOn" checked> 🔊 Voz</label>
+    </div>
+  </div>
+  <div id="estadoRec" class="pill" style="margin-top:10px">Avisos: apagados</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" data-tab="pend" id="tabPend">Pendientes (<span id="cPend">0</span>)</div>
+  <div class="tab" data-tab="real" id="tabReal">Realizados (<span id="cReal">0</span>)</div>
+</div>
+
+<div id="viewPend"></div>
+<div id="viewReal" style="display:none"></div>
+
+<div class="foot">
+  💡 Consejo: abrí esto en Chrome del celu → menú ⋮ → <b>"Agregar a pantalla de inicio"</b>.<br>
+  Queda como una app. Los datos se guardan en tu teléfono, no se van a ningún servidor.
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  const KEY="ayudamemoria_gaby_v1";
+  const CAT_META={Servicio:"🛠",Mails:"✉️",Pedidos:"📦",Personal:"🌸"};
+  const ORDER=["Servicio","Mails","Pedidos","Personal"];
+
+  let state=load();
+  let selectedCat="Servicio";
+  let timer=null;
+  let recognizing=false;
+
+  const $=id=>document.getElementById(id);
+
+  function load(){
+    try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.pend)return d;}catch(e){}
+    return {pend:[],real:[],intervalo:10,voz:true,avisos:false};
+  }
+  function save(){localStorage.setItem(KEY,JSON.stringify(state));}
+
+  function speak(text){
+    if(!state.voz) return;
+    try{
+      const u=new SpeechSynthesisUtterance(text);
+      u.lang="es-ES"; u.rate=1;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  }
+  function toast(msg){
+    const t=$("toast"); t.textContent=msg; t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"),2200);
+  }
+  function hoy(){
+    const d=new Date();
+    return d.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"numeric"});
+  }
+  function ahora(){
+    return new Date().toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"});
+  }
+
+  // ---- Agregar ----
+  function agregar(){
+    const txt=$("entrada").value.trim();
+    if(!txt){toast("Escribí o dictá algo primero");return;}
+    state.pend.push({id:Date.now()+"_"+Math.random().toString(36).slice(2,6),
+      txt, cat:selectedCat, creado:hoy()+" "+ahora()});
+    $("entrada").value="";
+    save(); render();
+    toast("Anotado en "+selectedCat);
+  }
+
+  // ---- Completar ----
+  function completar(id){
+    const i=state.pend.findIndex(x=>x.id===id);
+    if(i<0)return;
+    const it=state.pend.splice(i,1)[0];
+    it.hecho=hoy(); it.horaHecho=ahora();
+    state.real.unshift(it);
+    save(); render();
+    speak("Listo. "+it.txt);
+    toast("✅ Listo — "+it.txt.slice(0,40));
+  }
+
+  function borrar(id,lista){
+    state[lista]=state[lista].filter(x=>x.id!==id);
+    save(); render();
+  }
+
+  // ---- Render ----
+  function grupoPend(){
+    const v=$("viewPend"); v.innerHTML="";
+    $("cPend").textContent=state.pend.length;
+    if(!state.pend.length){v.innerHTML='<div class="empty">Nada pendiente. Respirá. 🌿</div>';return;}
+    ORDER.forEach(cat=>{
+      const items=state.pend.filter(x=>x.cat===cat);
+      if(!items.length)return;
+      const g=document.createElement("div");
+      g.innerHTML='<div class="group-title"><span class="dot '+cat+'"></span>'+CAT_META[cat]+' '+cat+' · '+items.length+'</div>';
+      items.forEach(it=>{
+        const el=document.createElement("div"); el.className="item";
+        el.innerHTML='<button class="check" title="Marcar hecho">✓</button>'+
+          '<div class="txt">'+esc(it.txt)+'<div class="meta">🕗 '+it.creado+'</div></div>'+
+          '<button class="del" title="Borrar">🗑</button>';
+        el.querySelector(".check").onclick=()=>completar(it.id);
+        el.querySelector(".del").onclick=()=>borrar(it.id,"pend");
+        g.appendChild(el);
+      });
+      v.appendChild(g);
+    });
+  }
+
+  function grupoReal(){
+    const v=$("viewReal"); v.innerHTML="";
+    $("cReal").textContent=state.real.length;
+    if(!state.real.length){v.innerHTML='<div class="empty">Todavía no completaste nada… todo se andará. 💪</div>';return;}
+    // agrupar por fecha
+    const byDate={};
+    state.real.forEach(it=>{(byDate[it.hecho]=byDate[it.hecho]||[]).push(it);});
+    Object.keys(byDate).forEach(fecha=>{
+      const g=document.createElement("div");
+      g.innerHTML='<div class="group-title">📅 '+fecha+' · '+byDate[fecha].length+'</div>';
+      byDate[fecha].forEach(it=>{
+        const el=document.createElement("div"); el.className="item done";
+        el.innerHTML='<div class="txt">'+CAT_META[it.cat]+' '+esc(it.txt)+
+          '<div class="meta">Hecho '+it.horaHecho+' · '+it.cat+'</div></div>'+
+          '<button class="del" title="Borrar">🗑</button>';
+        el.querySelector(".del").onclick=()=>borrar(it.id,"real");
+        g.appendChild(el);
+      });
+      v.appendChild(g);
+    });
+    const exp=document.createElement("button");
+    exp.className="ghost"; exp.style.width="100%"; exp.style.marginTop="10px";
+    exp.textContent="⬇️ Exportar realizados (.txt)";
+    exp.onclick=exportar;
+    v.appendChild(exp);
+  }
+
+  function render(){grupoPend();grupoReal();}
+  function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+
+  // ---- Exportar ----
+  function exportar(){
+    let out="REALIZADOS · Ayuda-Memoria de Gaby\nExportado "+hoy()+" "+ahora()+"\n\n";
+    const byDate={};
+    state.real.forEach(it=>{(byDate[it.hecho]=byDate[it.hecho]||[]).push(it);});
+    Object.keys(byDate).forEach(f=>{
+      out+="=== "+f+" ===\n";
+      byDate[f].forEach(it=>{out+="["+it.cat+"] "+it.txt+"  (hecho "+it.horaHecho+")\n";});
+      out+="\n";
+    });
+    const blob=new Blob([out],{type:"text/plain"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob); a.download="realizados_"+hoy().replace(/\//g,"-")+".txt";
+    a.click();
+  }
+
+  // ---- Recordatorios ----
+  function textoRecordatorio(){
+    if(!state.pend.length)return null;
+    const porCat={};
+    state.pend.forEach(x=>porCat[x.cat]=(porCat[x.cat]||0)+1);
+    const resumen=ORDER.filter(c=>porCat[c]).map(c=>porCat[c]+" en "+c).join(", ");
+    return "Tenés "+state.pend.length+" pendientes: "+resumen;
+  }
+  function disparar(){
+    const t=textoRecordatorio();
+    if(!t)return;
+    speak(t);
+    toast("⏰ "+t);
+    if("Notification" in window && Notification.permission==="granted"){
+      try{new Notification("⏰ Ayuda-Memoria",{body:t});}catch(e){}
+    }
+  }
+  function arrancarTimer(){
+    if(timer)clearInterval(timer);
+    const min=Math.max(1,parseInt(state.intervalo)||10);
+    timer=setInterval(disparar,min*60*1000);
+    $("estadoRec").textContent="Avisos: ON · cada "+min+" min";
+    $("toggleRec").textContent="⏸ Pausar avisos";
+  }
+  function pararTimer(){
+    if(timer)clearInterval(timer); timer=null;
+    $("estadoRec").textContent="Avisos: apagados";
+    $("toggleRec").textContent="⏰ Activar avisos";
+  }
+  function toggleAvisos(){
+    state.avisos=!state.avisos; save();
+    if(state.avisos){
+      if("Notification" in window && Notification.permission==="default"){Notification.requestPermission();}
+      // "despierta" la síntesis de voz con gesto del usuario
+      speak("Avisos activados. Te recuerdo cada "+state.intervalo+" minutos.");
+      arrancarTimer();
+    }else{pararTimer();}
+  }
+
+  // ---- Voz (dictado) ----
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  let rec=null;
+  if(SR){
+    rec=new SR(); rec.lang="es-ES"; rec.interimResults=true; rec.continuous=false;
+    let base="";
+    rec.onstart=()=>{recognizing=true;$("micBtn").classList.add("rec");base=$("entrada").value;};
+    rec.onerror=()=>{recognizing=false;$("micBtn").classList.remove("rec");};
+    rec.onend=()=>{recognizing=false;$("micBtn").classList.remove("rec");};
+    rec.onresult=(e)=>{
+      let s="";
+      for(let i=0;i<e.results.length;i++){s+=e.results[i][0].transcript;}
+      $("entrada").value=(base?base+" ":"")+s;
+    };
+  }
+  function micClick(){
+    if(!rec){$("banner").style.display="block";
+      $("banner").textContent="Tu navegador no soporta dictado por voz. Probá con Chrome. Podés escribir igual.";return;}
+    if(recognizing){rec.stop();}else{try{rec.start();}catch(e){}}
+  }
+
+  // ---- Tabs ----
+  function tab(which){
+    const p=which==="pend";
+    $("viewPend").style.display=p?"block":"none";
+    $("viewReal").style.display=p?"none":"block";
+    $("tabPend").classList.toggle("active",p);
+    $("tabReal").classList.toggle("active",!p);
+  }
+
+  // ---- Init ----
+  function init(){
+    $("intervalo").value=state.intervalo;
+    $("vozOn").checked=state.voz;
+    // categorías
+    document.querySelectorAll(".catbtn").forEach(b=>{
+      b.onclick=()=>{document.querySelectorAll(".catbtn").forEach(x=>x.classList.remove("active"));
+        b.classList.add("active");selectedCat=b.dataset.c;};
+    });
+    $("addBtn").onclick=agregar;
+    $("micBtn").onclick=micClick;
+    $("toggleRec").onclick=toggleAvisos;
+    $("vozOn").onchange=e=>{state.voz=e.target.checked;save();};
+    $("intervalo").onchange=e=>{state.intervalo=Math.max(1,parseInt(e.target.value)||10);save();
+      if(state.avisos)arrancarTimer();};
+    $("tabPend").onclick=()=>tab("pend");
+    $("tabReal").onclick=()=>tab("real");
+    // Enter+ctrl para agregar rápido
+    $("entrada").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey))agregar();});
+    render();
+    if(state.avisos){/* requiere gesto para voz; dejamos apagado hasta que toque el botón */ pararTimer(); state.avisos=false; save();}
+  }
+  init();
+})();
+</script>
+</body>
+</html>
