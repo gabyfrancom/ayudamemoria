@@ -5,178 +5,361 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ayuda Memoria</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
-  
-  header { background: linear-gradient(135deg, #1e293b, #334155); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #475569; position: sticky; top: 0; z-index: 100; }
-  header h1 { font-size: 1.3rem; font-weight: 700; }
-  header h1 span { color: #38bdf8; }
-  .header-controls { display: flex; gap: 10px; align-items: center; }
-  .timer-badge { background: #1e293b; border: 1px solid #475569; border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; color: #94a3b8; }
-  .timer-badge.active { border-color: #22c55e; color: #22c55e; }
-  .btn-reset { background: none; border: 1px solid #ef4444; color: #ef4444; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.75rem; }
-  .btn-reset:hover { background: #ef4444; color: #fff; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: #0a0e1a; color: #e2e8f0; min-height: 100vh; overflow-x: hidden; }
 
-  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+  .bg-glow { position: fixed; top: -200px; left: 50%; transform: translateX(-50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+  .bg-glow-2 { position: fixed; bottom: -300px; right: -200px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 70%); pointer-events: none; z-index: 0; }
 
-  .input-section { background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 1px solid #334155; }
+  header { background: rgba(15,20,35,0.85); backdrop-filter: blur(20px); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.06); position: sticky; top: 0; z-index: 100; }
+  header h1 { font-size: 1.2rem; font-weight: 800; background: linear-gradient(135deg, #818cf8, #c084fc, #f472b6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -0.5px; }
+  .header-controls { display: flex; gap: 8px; align-items: center; }
+  .timer-badge { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); border-radius: 20px; padding: 5px 14px; font-size: 0.75rem; font-weight: 600; color: #818cf8; transition: all 0.3s; }
+  .timer-badge.active { border-color: rgba(34,197,94,0.5); color: #4ade80; background: rgba(34,197,94,0.1); animation: timerPulse 2s infinite; }
+  @keyframes timerPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.2); } 50% { box-shadow: 0 0 12px 2px rgba(34,197,94,0.1); } }
+  .btn-reset { background: none; border: 1px solid rgba(239,68,68,0.3); color: #f87171; border-radius: 8px; padding: 5px 10px; cursor: pointer; font-size: 0.7rem; font-weight: 600; transition: all 0.2s; }
+  .btn-reset:hover { background: rgba(239,68,68,0.15); border-color: #f87171; }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 20px 16px; position: relative; z-index: 1; }
+
+  /* ---- Micrófono Section ---- */
+  .mic-section { background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(168,85,247,0.08)); border: 1px solid rgba(129,140,248,0.15); border-radius: 16px; padding: 20px; margin-bottom: 20px; text-align: center; }
+  .mic-section h2 { font-size: 0.85rem; color: #a5b4fc; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+  .mic-row { display: flex; align-items: center; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .mic-visual { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #a855f7); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s; position: relative; border: none; color: #fff; font-size: 1.8rem; }
+  .mic-visual:hover { transform: scale(1.08); box-shadow: 0 0 30px rgba(139,92,246,0.4); }
+  .mic-visual.recording { animation: micPulse 1.2s infinite; background: linear-gradient(135deg, #ef4444, #f97316); }
+  .mic-visual.recording::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid rgba(239,68,68,0.4); animation: micRing 1.2s infinite; }
+  .mic-visual.recording::after { content: ''; position: absolute; inset: -14px; border-radius: 50%; border: 1px solid rgba(239,68,68,0.2); animation: micRing 1.2s 0.3s infinite; }
+  @keyframes micPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+  @keyframes micRing { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.3); } }
+  .mic-status { font-size: 0.8rem; color: #64748b; margin-top: 10px; min-height: 20px; }
+  .mic-status.listening { color: #f87171; font-weight: 600; animation: blink 1s infinite; }
+  .mic-status.transcript { color: #a5b4fc; font-style: italic; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .mic-hints { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+  .mic-hint { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 3px 10px; font-size: 0.7rem; color: #64748b; }
+
+  /* ---- Input Section ---- */
+  .input-section { background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(30,41,59,0.6)); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 16px; margin-bottom: 20px; backdrop-filter: blur(10px); }
   .input-row { display: flex; gap: 10px; }
-  .input-row input { flex: 1; background: #0f172a; border: 1px solid #475569; border-radius: 8px; padding: 10px 14px; color: #e2e8f0; font-size: 0.95rem; outline: none; }
-  .input-row input:focus { border-color: #38bdf8; }
-  .input-row select { background: #0f172a; border: 1px solid #475569; border-radius: 8px; padding: 10px; color: #e2e8f0; font-size: 0.9rem; outline: none; cursor: pointer; }
-  .btn-add { background: #38bdf8; color: #0f172a; border: none; border-radius: 8px; padding: 10px 18px; font-weight: 700; cursor: pointer; font-size: 0.9rem; white-space: nowrap; }
-  .btn-add:hover { background: #7dd3fc; }
-  .btn-voice { background: #ef4444; color: #fff; border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-size: 1rem; width: 44px; display: flex; align-items: center; justify-content: center; }
-  .btn-voice:hover { background: #dc2626; }
-  .btn-voice.recording { animation: pulse 1s infinite; background: #dc2626; }
-  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
-  .quick-add { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
-  .quick-add span { font-size: 0.8rem; color: #64748b; padding-top: 4px; }
+  .input-row input, .input-row select, .input-row input[type="date"], .input-row input[type="time"] { background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 14px; color: #e2e8f0; font-size: 0.9rem; outline: none; transition: border-color 0.2s; font-family: inherit; }
+  .input-row input:focus, .input-row select:focus, .input-row input[type="date"]:focus, .input-row input[type="time"]:focus { border-color: #818cf8; }
+  .input-row input[type="text"] { flex: 1; min-width: 0; }
+  .input-row select { cursor: pointer; }
+  .input-row input[type="date"], .input-row input[type="time"] { width: 145px; color-scheme: dark; }
+  .btn-add { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; border-radius: 10px; padding: 10px 20px; font-weight: 700; cursor: pointer; font-size: 0.85rem; white-space: nowrap; transition: all 0.2s; font-family: inherit; }
+  .btn-add:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(99,102,241,0.4); }
 
-  .categories { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 600px) { .categories { grid-template-columns: 1fr; } .input-row { flex-wrap: wrap; } }
+  .alarm-toggle { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .alarm-toggle label { font-size: 0.8rem; color: #94a3b8; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .alarm-toggle input[type="checkbox"] { accent-color: #818cf8; width: 16px; height: 16px; cursor: pointer; }
+  .alarm-fields { display: none; gap: 8px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
+  .alarm-fields.show { display: flex; }
+  .alarm-fields label { font-size: 0.75rem; color: #64748b; }
+  .alarm-fields .alarm-tag { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); color: #fbbf24; border-radius: 12px; padding: 3px 10px; font-size: 0.7rem; font-weight: 600; }
 
-  .category { background: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
-  .cat-header { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; font-weight: 700; font-size: 0.95rem; }
-  .cat-header .icon { margin-right: 8px; }
-  .cat-header .count { background: #334155; border-radius: 12px; padding: 2px 10px; font-size: 0.75rem; font-weight: 600; }
-  .cat-body { padding: 0 12px 12px; min-height: 40px; max-height: 300px; overflow-y: auto; }
-  .cat-body::-webkit-scrollbar { width: 4px; }
-  .cat-body::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+  /* ---- Categories ---- */
+  .categories { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .categories { grid-template-columns: 1fr; } .input-row { flex-wrap: wrap; } .input-row input[type="date"], .input-row input[type="time"] { width: 100%; } }
 
-  .cat-pedidos .cat-header { border-left: 3px solid #f59e0b; }
-  .cat-mails .cat-header { border-left: 3px solid #3b82f6; }
-  .cat-llamadas .cat-header { border-left: 3px solid #a855f7; }
-  .cat-pendientes .cat-header { border-left: 3px solid #ef4444; }
+  .category { background: rgba(30,41,59,0.5); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; overflow: hidden; transition: all 0.3s; }
+  .category:hover { border-color: rgba(255,255,255,0.1); }
+  .cat-header { padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; font-weight: 700; font-size: 0.9rem; }
+  .cat-header .label { display: flex; align-items: center; gap: 6px; }
+  .cat-header .count { border-radius: 20px; padding: 2px 10px; font-size: 0.7rem; font-weight: 700; min-width: 28px; text-align: center; }
+  .cat-body { padding: 0 10px 10px; min-height: 36px; max-height: 280px; overflow-y: auto; }
+  .cat-body::-webkit-scrollbar { width: 3px; }
+  .cat-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
-  .item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #0f172a; border-radius: 8px; margin-bottom: 6px; transition: all 0.2s; }
-  .item:hover { background: #1a2744; }
-  .item .text { flex: 1; font-size: 0.9rem; word-break: break-word; }
-  .item .time { font-size: 0.7rem; color: #64748b; white-space: nowrap; }
-  .item .btn-done { background: #22c55e; color: #fff; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.75rem; font-weight: 600; }
-  .item .btn-done:hover { background: #16a34a; }
-  .item .btn-delete { background: none; border: none; color: #64748b; cursor: pointer; font-size: 1rem; padding: 2px 4px; }
-  .item .btn-delete:hover { color: #ef4444; }
+  .cat-pedidos .cat-header { border-bottom: 2px solid rgba(251,191,36,0.3); }
+  .cat-pedidos .count { background: rgba(251,191,36,0.15); color: #fbbf24; }
+  .cat-pedidos { background: linear-gradient(180deg, rgba(251,191,36,0.04), transparent); }
 
+  .cat-mails .cat-header { border-bottom: 2px solid rgba(96,165,250,0.3); }
+  .cat-mails .count { background: rgba(96,165,250,0.15); color: #60a5fa; }
+  .cat-mails { background: linear-gradient(180deg, rgba(96,165,250,0.04), transparent); }
+
+  .cat-llamadas .cat-header { border-bottom: 2px solid rgba(192,132,252,0.3); }
+  .cat-llamadas .count { background: rgba(192,132,252,0.15); color: #c084fc; }
+  .cat-llamadas { background: linear-gradient(180deg, rgba(192,132,252,0.04), transparent); }
+
+  .cat-pendientes .cat-header { border-bottom: 2px solid rgba(251,113,133,0.3); }
+  .cat-pendientes .count { background: rgba(251,113,133,0.15); color: #fb7185; }
+  .cat-pendientes { background: linear-gradient(180deg, rgba(251,113,133,0.04), transparent); }
+
+  .item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: rgba(15,23,42,0.5); border-radius: 10px; margin-bottom: 5px; transition: all 0.2s; border: 1px solid transparent; animation: itemIn 0.3s ease; }
+  @keyframes itemIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .item:hover { background: rgba(30,41,59,0.8); border-color: rgba(255,255,255,0.06); }
+  .item .text { flex: 1; font-size: 0.85rem; word-break: break-word; }
+  .item .meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .item .time { font-size: 0.65rem; color: #475569; }
+  .item .alarm-badge { font-size: 0.6rem; background: rgba(251,191,36,0.15); color: #fbbf24; padding: 1px 6px; border-radius: 8px; font-weight: 600; }
+  .item .btn-done { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; border: none; border-radius: 8px; padding: 5px 10px; cursor: pointer; font-size: 0.7rem; font-weight: 700; transition: all 0.2s; }
+  .item .btn-done:hover { transform: scale(1.05); box-shadow: 0 2px 8px rgba(34,197,94,0.3); }
+  .item .btn-delete { background: none; border: none; color: #475569; cursor: pointer; font-size: 1rem; padding: 2px 6px; transition: color 0.2s; }
+  .item .btn-delete:hover { color: #f87171; }
+
+  /* ---- Alarms Section ---- */
+  .alarms-section { margin-top: 20px; }
+  .alarms-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .alarms-header h3 { font-size: 0.9rem; color: #fbbf24; font-weight: 700; }
+  .alarms-header .badge { background: rgba(251,191,36,0.15); color: #fbbf24; border-radius: 12px; padding: 2px 8px; font-size: 0.7rem; font-weight: 700; }
+  .alarm-card { background: linear-gradient(135deg, rgba(251,191,36,0.06), rgba(251,191,36,0.02)); border: 1px solid rgba(251,191,36,0.15); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; animation: itemIn 0.3s ease; }
+  .alarm-card .alarm-icon { font-size: 1.4rem; }
+  .alarm-card .alarm-info { flex: 1; }
+  .alarm-card .alarm-info .alarm-text { font-size: 0.85rem; font-weight: 600; }
+  .alarm-card .alarm-info .alarm-datetime { font-size: 0.75rem; color: #fbbf24; margin-top: 2px; }
+  .alarm-card .alarm-info .alarm-cat { font-size: 0.65rem; color: #64748b; }
+  .alarm-card .alarm-countdown { font-size: 0.75rem; font-weight: 700; color: #fbbf24; white-space: nowrap; }
+  .alarm-card .btn-cancel-alarm { background: none; border: 1px solid rgba(239,68,68,0.3); color: #f87171; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.7rem; transition: all 0.2s; }
+  .alarm-card .btn-cancel-alarm:hover { background: rgba(239,68,68,0.15); }
+  .alarms-empty { text-align: center; padding: 16px; color: #475569; font-size: 0.8rem; }
+
+  /* ---- Completed ---- */
   .completed-section { margin-top: 24px; }
   .completed-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 10px 0; }
-  .completed-header h3 { font-size: 0.95rem; color: #64748b; }
-  .completed-header .arrow { transition: transform 0.2s; color: #64748b; }
+  .completed-header h3 { font-size: 0.9rem; color: #475569; }
+  .completed-header .arrow { transition: transform 0.3s; color: #475569; font-size: 0.8rem; }
   .completed-header .arrow.open { transform: rotate(180deg); }
-  .completed-list { display: none; }
-  .completed-list.show { display: block; }
-  .completed-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; font-size: 0.85rem; color: #64748b; text-decoration: line-through; }
-  .completed-item .cat-tag { font-size: 0.65rem; padding: 1px 6px; border-radius: 4px; text-transform: uppercase; font-weight: 700; }
-  .tag-pedidos { background: #78350f; color: #fbbf24; }
-  .tag-mails { background: #1e3a5f; color: #60a5fa; }
-  .tag-llamadas { background: #3b0764; color: #c084fc; }
-  .tag-pendientes { background: #7f1d1d; color: #fca5a5; }
-  .completed-item .btn-undo { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.8rem; }
-  .completed-item .btn-undo:hover { color: #38bdf8; }
+  .completed-list { display: none; max-height: 250px; overflow-y: auto; }
+  .completed-list.show { display: block; animation: itemIn 0.3s ease; }
+  .completed-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; font-size: 0.8rem; color: #475569; text-decoration: line-through; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .completed-item .cat-tag { font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+  .tag-pedidos { background: rgba(251,191,36,0.1); color: #fbbf24; }
+  .tag-mails { background: rgba(96,165,250,0.1); color: #60a5fa; }
+  .tag-llamadas { background: rgba(192,132,252,0.1); color: #c084fc; }
+  .tag-pendientes { background: rgba(251,113,133,0.1); color: #fb7185; }
+  .completed-item .btn-undo { background: none; border: none; color: #64748b; cursor: pointer; font-size: 0.8rem; transition: color 0.2s; }
+  .completed-item .btn-undo:hover { color: #818cf8; }
 
-  .empty-state { text-align: center; padding: 16px; color: #475569; font-size: 0.85rem; }
+  .empty-state { text-align: center; padding: 14px; color: #334155; font-size: 0.8rem; }
 
-  .notification-toast { position: fixed; top: 80px; right: 20px; background: #1e293b; border: 1px solid #f59e0b; border-radius: 12px; padding: 16px 20px; max-width: 350px; z-index: 200; box-shadow: 0 8px 32px rgba(0,0,0,0.4); display: none; }
-  .notification-toast.show { display: block; animation: slideIn 0.3s ease; }
-  @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
-  .notification-toast h4 { color: #f59e0b; margin-bottom: 8px; font-size: 0.9rem; }
-  .notification-toast ul { list-style: none; padding: 0; }
-  .notification-toast li { padding: 3px 0; font-size: 0.85rem; }
-  .notification-toast .close-toast { position: absolute; top: 8px; right: 12px; background: none; border: none; color: #64748b; cursor: pointer; font-size: 1.1rem; }
+  /* ---- Toast ---- */
+  .toast-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 300; display: none; align-items: center; justify-content: center; }
+  .toast-overlay.show { display: flex; animation: fadeIn 0.3s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .toast-box { background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid rgba(251,191,36,0.3); border-radius: 18px; padding: 24px; max-width: 420px; width: 90%; max-height: 70vh; overflow-y: auto; position: relative; animation: toastIn 0.4s ease; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(251,191,36,0.1); }
+  @keyframes toastIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .toast-box .toast-icon { font-size: 2.5rem; text-align: center; margin-bottom: 8px; animation: bounce 0.6s ease; }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 40% { transform: translateY(-12px); } 60% { transform: translateY(-6px); } }
+  .toast-box h3 { text-align: center; color: #fbbf24; font-size: 1.1rem; margin-bottom: 4px; }
+  .toast-box .toast-sub { text-align: center; color: #64748b; font-size: 0.8rem; margin-bottom: 16px; }
+  .toast-box ul { list-style: none; padding: 0; }
+  .toast-box li { padding: 5px 0; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .toast-box li strong { font-size: 0.75rem; }
+  .toast-box .toast-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: center; }
+  .toast-box .toast-btn { border: none; border-radius: 10px; padding: 8px 20px; font-weight: 700; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; font-family: inherit; }
+  .toast-btn-dismiss { background: rgba(255,255,255,0.08); color: #94a3b8; }
+  .toast-btn-dismiss:hover { background: rgba(255,255,255,0.12); }
 
-  .status-bar { text-align: center; padding: 8px; color: #475569; font-size: 0.75rem; margin-top: 20px; }
+  /* ---- Alarm Ringing Overlay ---- */
+  .alarm-ring-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 400; display: none; align-items: center; justify-content: center; }
+  .alarm-ring-overlay.show { display: flex; }
+  .alarm-ring-box { background: linear-gradient(135deg, #1a1030, #0f172a); border: 2px solid rgba(251,191,36,0.5); border-radius: 24px; padding: 32px; max-width: 400px; width: 90%; text-align: center; animation: alarmBounce 0.5s ease; box-shadow: 0 0 80px rgba(251,191,36,0.2); }
+  @keyframes alarmBounce { 0% { transform: scale(0.8); opacity: 0; } 50% { transform: scale(1.03); } 100% { transform: scale(1); opacity: 1; } }
+  .alarm-ring-box .ring-icon { font-size: 4rem; animation: ringShake 0.5s ease infinite alternate; }
+  @keyframes ringShake { from { transform: rotate(-15deg); } to { transform: rotate(15deg); } }
+  .alarm-ring-box h2 { color: #fbbf24; font-size: 1.3rem; margin: 12px 0 4px; }
+  .alarm-ring-box .ring-text { color: #e2e8f0; font-size: 1rem; margin-bottom: 4px; }
+  .alarm-ring-box .ring-cat { color: #94a3b8; font-size: 0.8rem; margin-bottom: 20px; }
+  .alarm-ring-box .ring-time { color: #fbbf24; font-size: 0.75rem; margin-bottom: 20px; }
+  .alarm-ring-box .btn-snooze { background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.3); color: #fbbf24; border-radius: 10px; padding: 10px 24px; font-weight: 700; cursor: pointer; font-size: 0.85rem; margin-right: 8px; transition: all 0.2s; font-family: inherit; }
+  .alarm-ring-box .btn-snooze:hover { background: rgba(251,191,36,0.25); }
+  .alarm-ring-box .btn-dismiss-alarm { background: linear-gradient(135deg, #22c55e, #16a34a); border: none; color: #fff; border-radius: 10px; padding: 10px 24px; font-weight: 700; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; font-family: inherit; }
+  .alarm-ring-box .btn-dismiss-alarm:hover { transform: scale(1.03); }
+
+  .status-bar { text-align: center; padding: 12px; color: #334155; font-size: 0.72rem; margin-top: 20px; letter-spacing: 0.5px; }
+
+  input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }
 </style>
 </head>
 <body>
 
+<div class="bg-glow"></div>
+<div class="bg-glow-2"></div>
+
 <header>
-  <h1>&#x1F4CB; Ayuda <span>Memoria</span></h1>
+  <h1>Ayuda Memoria</h1>
   <div class="header-controls">
-    <span class="timer-badge active" id="timerBadge">&#x23F0; Recordatorio: 10:00</span>
-    <button class="btn-reset" onclick="resetAll()" title="Borrar todo">&#x1F5D1; Limpiar</button>
+    <span class="timer-badge active" id="timerBadge">Recordatorio: 10:00</span>
+    <button class="btn-reset" onclick="resetAll()" title="Borrar todo">Limpiar</button>
   </div>
 </header>
 
 <div class="container">
-  <div class="input-section">
-    <div class="input-row">
-      <select id="categorySelect">
-        <option value="pedidos">&#x1F4E6; Pedidos</option>
-        <option value="mails">&#x1F4E7; Mails</option>
-        <option value="llamadas">&#x1F4DE; Llamadas</option>
-        <option value="pendientes">&#x26A0;&#xFE0F; Pendientes</option>
-      </select>
-      <input type="text" id="taskInput" placeholder="Escribe tu pendiente..." onkeydown="if(event.key==='Enter') addTask()">
-      <button class="btn-voice" id="voiceBtn" onclick="toggleVoice()" title="Hablar">&#x1F3A4;</button>
-      <button class="btn-add" onclick="addTask()">Agregar</button>
+  <!-- VOICE SECTION -->
+  <div class="mic-section">
+    <h2>Dictado por voz</h2>
+    <div class="mic-row">
+      <button class="mic-visual" id="micBtn" onclick="toggleVoice()" title="Activar micrófono">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+      <div style="text-align:left">
+        <div style="font-size:0.9rem;font-weight:600;color:#c4b5fd">Habla ahora</div>
+        <div class="mic-status" id="micStatus">Toca para activar el micrófono</div>
+      </div>
+    </div>
+    <div class="mic-hints">
+      <span class="mic-hint">"agregar llamar a Juan"</span>
+      <span class="mic-hint">"listo"</span>
+      <span class="mic-hint">"nueva reunión 3pm"</span>
     </div>
   </div>
 
+  <!-- INPUT SECTION -->
+  <div class="input-section">
+    <div class="input-row">
+      <select id="categorySelect">
+        <option value="pedidos">Pedidos</option>
+        <option value="mails">Mails</option>
+        <option value="llamadas">Llamadas</option>
+        <option value="pendientes">Pendientes</option>
+      </select>
+      <input type="text" id="taskInput" placeholder="Escribe tu pendiente..." onkeydown="if(event.key==='Enter') addTask()">
+      <button class="btn-add" onclick="addTask()">Agregar</button>
+    </div>
+    <div class="alarm-toggle">
+      <label><input type="checkbox" id="alarmCheck" onchange="toggleAlarmFields()"> Programar alarma</label>
+    </div>
+    <div class="alarm-fields" id="alarmFields">
+      <label>Para:</label>
+      <input type="date" id="alarmDate">
+      <input type="time" id="alarmTime">
+      <span class="alarm-tag" id="alarmPreview"></span>
+    </div>
+  </div>
+
+  <!-- CATEGORIES -->
   <div class="categories">
     <div class="category cat-pedidos">
       <div class="cat-header">
-        <span><span class="icon">&#x1F4E6;</span> Pedidos</span>
+        <span class="label">Pedidos</span>
         <span class="count" id="count-pedidos">0</span>
       </div>
       <div class="cat-body" id="list-pedidos"></div>
     </div>
     <div class="category cat-mails">
       <div class="cat-header">
-        <span><span class="icon">&#x1F4E7;</span> Mails</span>
+        <span class="label">Mails</span>
         <span class="count" id="count-mails">0</span>
       </div>
       <div class="cat-body" id="list-mails"></div>
     </div>
     <div class="category cat-llamadas">
       <div class="cat-header">
-        <span><span class="icon">&#x1F4DE;</span> Llamadas</span>
+        <span class="label">Llamadas</span>
         <span class="count" id="count-llamadas">0</span>
       </div>
       <div class="cat-body" id="list-llamadas"></div>
     </div>
     <div class="category cat-pendientes">
       <div class="cat-header">
-        <span><span class="icon">&#x26A0;&#xFE0F;</span> Pendientes</span>
+        <span class="label">Pendientes</span>
         <span class="count" id="count-pendientes">0</span>
       </div>
       <div class="cat-body" id="list-pendientes"></div>
     </div>
   </div>
 
+  <!-- SCHEDULED ALARMS -->
+  <div class="alarms-section" id="alarmsSection" style="display:none">
+    <div class="alarms-header">
+      <h3>Alarmas programadas</h3>
+      <span class="badge" id="alarmsCount">0</span>
+    </div>
+    <div id="alarmsList"></div>
+  </div>
+
+  <!-- COMPLETED -->
   <div class="completed-section">
     <div class="completed-header" onclick="toggleCompleted()">
-      <h3>&#x2705; Realizados (<span id="count-completed">0</span>)</h3>
+      <h3>Realizados (<span id="count-completed">0</span>)</h3>
       <span class="arrow" id="arrow">&#x25BC;</span>
     </div>
     <div class="completed-list" id="completedList"></div>
   </div>
 
-  <div class="status-bar" id="statusBar">Sin pendientes. todo listo.</div>
+  <div class="status-bar" id="statusBar">Sin pendientes</div>
 </div>
 
-<div class="notification-toast" id="toast">
-  <button class="close-toast" onclick="closeToast()">&times;</button>
-  <h4>&#x1F514; Recordatorio pendientes</h4>
-  <ul id="toastList"></ul>
+<!-- REMINDER TOAST -->
+<div class="toast-overlay" id="toast" onclick="closeToast(event)">
+  <div class="toast-box" onclick="event.stopPropagation()">
+    <div class="toast-icon">&#x1F514;</div>
+    <h3>Recordatorio</h3>
+    <div class="toast-sub">Tienes pendientes sin resolver</div>
+    <ul id="toastList"></ul>
+    <div class="toast-actions">
+      <button class="toast-btn toast-btn-dismiss" onclick="closeToast()">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<!-- ALARM RINGING -->
+<div class="alarm-ring-overlay" id="alarmRing">
+  <div class="alarm-ring-box">
+    <div class="ring-icon">&#x23F0;</div>
+    <h2 id="ringTitle">Alarma</h2>
+    <div class="ring-text" id="ringText"></div>
+    <div class="ring-cat" id="ringCat"></div>
+    <div class="ring-time" id="ringTime"></div>
+    <button class="btn-snooze" onclick="snoozeAlarm()">Posponer 5 min</button>
+    <button class="btn-dismiss-alarm" onclick="dismissAlarm()">Marcar listo</button>
+  </div>
 </div>
 
 <script>
 const CATEGORIES = ['pedidos','mails','llamadas','pendientes'];
 const CAT_LABELS = { pedidos:'Pedidos', mails:'Mails', llamadas:'Llamadas', pendientes:'Pendientes' };
-const CAT_ICONS = { pedidos:'\u{1F4E6}', mails:'\u{1F4E7}', llamadas:'\u{1F4DE}', pendientes:'\u26A0\uFE0F' };
 
-let tasks = JSON.parse(localStorage.getItem('ayudaMemoria_tasks') || '[]');
-let completed = JSON.parse(localStorage.getItem('ayudaMemoria_completed') || '[]');
+let tasks = JSON.parse(localStorage.getItem('am_tasks') || '[]');
+let completed = JSON.parse(localStorage.getItem('am_completed') || '[]');
+let alarms = JSON.parse(localStorage.getItem('am_alarms') || '[]');
 let timerSeconds = 600;
 let timerInterval = null;
 let completedOpen = false;
 let recognition = null;
 let isRecording = false;
+let currentAlarmId = null;
+let alarmAudio = null;
+let alarmCheckInterval = null;
 
 function save() {
-  localStorage.setItem('ayudaMemoria_tasks', JSON.stringify(tasks));
-  localStorage.setItem('ayudaMemoria_completed', JSON.stringify(completed));
+  localStorage.setItem('am_tasks', JSON.stringify(tasks));
+  localStorage.setItem('am_completed', JSON.stringify(completed));
+  localStorage.setItem('am_alarms', JSON.stringify(alarms));
 }
+
+function now() { return new Date(); }
+
+function toggleAlarmFields() {
+  const show = document.getElementById('alarmCheck').checked;
+  document.getElementById('alarmFields').classList.toggle('show', show);
+  if (show) {
+    const d = document.getElementById('alarmDate');
+    const t = document.getElementById('alarmTime');
+    if (!d.value) {
+      const n = now();
+      d.value = n.toISOString().split('T')[0];
+      t.value = String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()+5).padStart(2,'0');
+    }
+    updateAlarmPreview();
+  }
+}
+
+function updateAlarmPreview() {
+  const d = document.getElementById('alarmDate').value;
+  const t = document.getElementById('alarmTime').value;
+  if (d && t) {
+    const dt = new Date(d + 'T' + t);
+    document.getElementById('alarmPreview').textContent = 'Alarma: ' + dt.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'}) + ' ' + t;
+  }
+}
+
+document.getElementById('alarmDate').addEventListener('change', updateAlarmPreview);
+document.getElementById('alarmTime').addEventListener('change', updateAlarmPreview);
 
 function addTask() {
   const input = document.getElementById('taskInput');
@@ -190,18 +373,36 @@ function addTask() {
     return;
   }
 
-  tasks.push({ id: Date.now(), text, category: cat, time: new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) });
+  const task = { id: Date.now(), text, category: cat, time: new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) };
+
+  const hasAlarm = document.getElementById('alarmCheck').checked;
+  if (hasAlarm) {
+    const d = document.getElementById('alarmDate').value;
+    const t = document.getElementById('alarmTime').value;
+    if (d && t) {
+      const alarmTime = new Date(d + 'T' + t);
+      if (alarmTime > now()) {
+        task.alarmId = Date.now() + 1;
+        alarms.push({ id: task.alarmId, taskId: task.id, text, category: cat, datetime: alarmTime.toISOString(), triggered: false });
+      }
+    }
+    document.getElementById('alarmCheck').checked = false;
+    document.getElementById('alarmFields').classList.remove('show');
+  }
+
+  tasks.push(task);
   input.value = '';
   save();
   render();
   resetTimer();
-  speak(CAT_ICONS[cat] + ' ' + text + ' agregado a ' + CAT_LABELS[cat]);
+  speak(text + ' agregado a ' + CAT_LABELS[cat]);
 }
 
 function completeTask(id) {
   const idx = tasks.findIndex(t => t.id === id);
   if (idx === -1) return;
   const task = tasks.splice(idx, 1)[0];
+  alarms = alarms.filter(a => a.taskId !== id);
   completed.unshift({ ...task, completedAt: new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) });
   save();
   render();
@@ -220,6 +421,7 @@ function undoTask(id) {
 
 function deleteTask(id) {
   tasks = tasks.filter(t => t.id !== id);
+  alarms = alarms.filter(a => a.taskId !== id);
   save();
   render();
 }
@@ -227,13 +429,91 @@ function deleteTask(id) {
 function completeAllFromCategory(cat) {
   const catTasks = tasks.filter(t => t.category === cat);
   if (catTasks.length === 0) { speak('No hay ' + CAT_LABELS[cat] + ' pendientes'); return; }
+  const ids = catTasks.map(t => t.id);
   catTasks.forEach(t => {
     completed.unshift({ ...t, completedAt: new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) });
   });
   tasks = tasks.filter(t => t.category !== cat);
+  alarms = alarms.filter(a => !ids.includes(a.taskId));
   save();
   render();
-  speak(catTasks.length + ' ' + CAT_LABELS[cat] + ' marcados como listos');
+  speak(catTasks.length + ' ' + CAT_LABELS[cat] + ' completados');
+}
+
+function cancelAlarm(id) {
+  alarms = alarms.filter(a => a.id !== id);
+  tasks.forEach(t => { if (t.alarmId === id) delete t.alarmId; });
+  save();
+  render();
+}
+
+function snoozeAlarm() {
+  if (!currentAlarmId) return;
+  const alarm = alarms.find(a => a.id === currentAlarmId);
+  if (alarm) {
+    const newTime = new Date(Date.now() + 5 * 60 * 1000);
+    alarm.datetime = newTime.toISOString();
+    alarm.triggered = false;
+  }
+  stopAlarmSound();
+  document.getElementById('alarmRing').classList.remove('show');
+  currentAlarmId = null;
+  save();
+  render();
+  speak('Alarma pospuesta 5 minutos');
+}
+
+function dismissAlarm() {
+  if (!currentAlarmId) return;
+  const alarm = alarms.find(a => a.id === currentAlarmId);
+  if (alarm) {
+    const task = tasks.find(t => t.id === alarm.taskId);
+    if (task) completeTask(task.id);
+    alarms = alarms.filter(a => a.id !== currentAlarmId);
+  }
+  stopAlarmSound();
+  document.getElementById('alarmRing').classList.remove('show');
+  currentAlarmId = null;
+  save();
+  render();
+  speak('Alarma completada');
+}
+
+function checkAlarms() {
+  const nowMs = Date.now();
+  alarms.forEach(alarm => {
+    if (alarm.triggered) return;
+    const alarmTime = new Date(alarm.datetime).getTime();
+    if (nowMs >= alarmTime) {
+      alarm.triggered = true;
+      triggerAlarmRing(alarm);
+      save();
+    }
+  });
+}
+
+function triggerAlarmRing(alarm) {
+  currentAlarmId = alarm.id;
+  document.getElementById('ringTitle').textContent = 'Alarma!';
+  document.getElementById('ringText').textContent = alarm.text;
+  document.getElementById('ringCat').textContent = CAT_LABELS[alarm.category];
+  document.getElementById('ringTime').textContent = new Date(alarm.datetime).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('alarmRing').classList.add('show');
+  speak('Alarma: ' + alarm.text);
+  startAlarmSound();
+  if (navigator.vibrate) navigator.vibrate([300,200,300,200,300]);
+}
+
+function startAlarmSound() {
+  stopAlarmSound();
+  alarmAudio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH+JkI2Gf3V1goqOjYmFf3d4goqOjYmFf3h5hIqPjYmGfnh5hIqPjYmGfnh6hoqQjYmGfnh6hoyRjYmGf3l6h4ySjYqHf3l7h4ySjYqHgHp7h4ySjYqIgHt8iI2TjYqIgHt8iI2TjYqJgHx9iY6UjYqJgHx9iY6UjYqJgH1+io+VjouKgH1+io+VjouKgH1/io+VjouKgH2AipCWj4uKgH2AipCWj4uLgH6BipGXkIuLgH6BipGXkIyMgH+BipKXkYyMgH+BipKXkYyNgH+BipKYko2NgH+BipKYko2NgH+BipKZko2NgH+BipKZko6OgH+CipKZko6OgH+CipKZko6OgH+Ei5Oako6OgH+Ei5Oako+PgH+Ei5OalI+QgH+Ei5OalI+QgH+Fi5SalI+QgH+Fi5SalI+RgH+Fi5SblI+RgH+Fi5SblI+RgH+Gi5WblI+RgH+Gi5WblZCSgH+Gi5WblZCSgH+Hi5WblZCTh4CIjJacmJGUh4CIjJacmJGUh4CJjZedmpGVh4CJjZedmpGVh4CKjpifnJOWiICKjpmfnJOWiICKjpqgnZSXiYCJjpqfnZSYioGKj5ugnpWYioGKj5yhn5aZi4GLkJ2in5eajIGLkJ6jn5eajIGMkZ+kn5iZjYGMkZ+kn5iZjYGNkqCmn5majYGNkqCmn5majYGOlKGnn5majYGOlKGnn5qcgY6WoqeenJqcgY6WoqeenZyeg4+XpKqfnZyeg4+XpKqfnp2fhI+Ypqugnp2fhI+Ypqugnp6ghJCZp6yhnp6ghJCZp6yhnp+hhZGaqK2in5+hhZGaqK2in5+ihpKbqa6in5+ihpKbqa6joKCjh5Ocq7Cin6Cjh5Ocq7Cin6Gkh5WdrbGin6Gkh5WdrbKioaKliJadrbKioaKliJadr7OioqOmiZqer7OioqOmiZqfr7Sio6Snipqfr7Sio6SnipqgsLWjpKWpi5ygsLWjpKWpi5yhtLakpaepjZ+htLakpaeqjqCjtbimpqiqj6Cjtbimpqiqj6GktraopqeqlKGktrqoqKeqlqKmtrypqaerl6Omtrypqaerl6Sot7yqqaiqmKSox7yqqaiqmKWpyL2rqqirmaWpyL2rqqirmaapyr6srKmrmqapy7+trKmrm6eryL+uramrnKeryL+uramrnaeszMGvrqqsnaeszMGvrqqtobCwr6qsn6Owraa1ta61ta62uLGyt7K0t7GzubO1ubW2ura3t7e4uLe4ubm5ubq5ubq6ubq6ubq6ubq6ubq6ubu7u7u7u7u7u7u7u7u7u7u7vLy8vLy9vb29vb6+vr6+v7+/v7+/v7+/v7/AwMDAwMHBwcHBwsLCwsLCw8PDw8PExMTExMXFxcXFxcbGxsbGx8fHx8fIyMjIyMnJycnJysrKysrLy8vLy8zMzMzMysrKysrNzc3Nzc7Ozs7Oz8/Pz8/Q0NDQ0MvLy8vLzMzMzMzPz8/P0NDQ0NDNzc3Nzc/Pz8/P0dHR0dHOzs7OztDQ0NDR0dHR0dHS0tLS0tPT09PT09PT09PT09PT1NTU1NTV1dXV1dbW1tbW19fX19fY2NjY2M3Nzc3N0NDQ0NDR0dHR0tLS0tLS0tPT09PT1NTU1NTW1tbW1tbW1tbX19fX19jY2NjYzc3Nzc3Q0NDQ0NHR0dHS0tLS0tLS09PT09PU1NTU1NbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09TU1NTU1tbW1tbW1tbW19fX19fY2NjY2M3Nzc3N0NDQ0NDR0dHR0tLS0tLS09PT09PU1NTU1NbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09TU1NTU1tbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09PQ==');
+  alarmAudio.loop = true;
+  alarmAudio.volume = 0.7;
+  alarmAudio.play().catch(() => {});
+}
+
+function stopAlarmSound() {
+  if (alarmAudio) { alarmAudio.pause(); alarmAudio = null; }
 }
 
 function render() {
@@ -244,41 +524,60 @@ function render() {
     if (catTasks.length === 0) {
       list.innerHTML = '<div class="empty-state">Sin pendientes</div>';
     } else {
-      list.innerHTML = catTasks.map(t => `
-        <div class="item">
-          <span class="text">${escapeHtml(t.text)}</span>
-          <span class="time">${t.time}</span>
-          <button class="btn-done" onclick="completeTask(${t.id})">Listo</button>
-          <button class="btn-delete" onclick="deleteTask(${t.id})" title="Eliminar">&times;</button>
-        </div>
-      `).join('');
+      list.innerHTML = catTasks.map(t => {
+        const alarmInfo = t.alarmId ? '<span class="alarm-badge">Alarma</span>' : '';
+        return '<div class="item"><span class="text">' + escapeHtml(t.text) + '</span><div class="meta"><span class="time">' + t.time + '</span>' + alarmInfo + '</div><button class="btn-done" onclick="completeTask(' + t.id + ')">Listo</button><button class="btn-delete" onclick="deleteTask(' + t.id + ')" title="Eliminar">&times;</button></div>';
+      }).join('');
     }
   });
 
   document.getElementById('count-completed').textContent = completed.length;
   const compList = document.getElementById('completedList');
   if (completed.length === 0) {
-    compList.innerHTML = '<div class="empty-state">Nada completado a&uacute;n</div>';
+    compList.innerHTML = '<div class="empty-state">Nada completado aun</div>';
   } else {
-    compList.innerHTML = completed.map(t => `
-      <div class="completed-item">
-        <span class="cat-tag tag-${t.category}">${CAT_LABELS[t.category]}</span>
-        <span style="flex:1">${escapeHtml(t.text)}</span>
-        <span style="font-size:0.7rem">${t.completedAt || ''}</span>
-        <button class="btn-undo" onclick="undoTask(${t.id})" title="Restaurar">&#x21A9;</button>
-      </div>
-    `).join('');
+    compList.innerHTML = completed.map(t =>
+      '<div class="completed-item"><span class="cat-tag tag-' + t.category + '">' + CAT_LABELS[t.category] + '</span><span style="flex:1">' + escapeHtml(t.text) + '</span><span style="font-size:0.65rem">' + (t.completedAt || '') + '</span><button class="btn-undo" onclick="undoTask(' + t.id + ')" title="Restaurar">&#x21A9;</button></div>'
+    ).join('');
   }
 
   const total = tasks.length;
   const bar = document.getElementById('statusBar');
   if (total === 0 && completed.length === 0) {
-    bar.textContent = 'Sin pendientes. todo listo.';
+    bar.textContent = 'Sin pendientes. Todo listo.';
   } else if (total === 0) {
-    bar.textContent = completed.length + ' completados. todo listo! &#x1F389;';
+    bar.textContent = completed.length + ' completados. Todo listo!';
   } else {
     bar.textContent = total + ' pendiente' + (total > 1 ? 's' : '') + ' | ' + completed.length + ' completado' + (completed.length !== 1 ? 's' : '');
   }
+
+  renderAlarms();
+}
+
+function renderAlarms() {
+  const nowMs = Date.now();
+  const futureAlarms = alarms.filter(a => !a.triggered && new Date(a.datetime).getTime() > nowMs);
+  const section = document.getElementById('alarmsSection');
+  const list = document.getElementById('alarmsList');
+  const count = document.getElementById('alarmsCount');
+
+  if (futureAlarms.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+  count.textContent = futureAlarms.length;
+
+  list.innerHTML = futureAlarms.map(a => {
+    const dt = new Date(a.datetime);
+    const diff = dt.getTime() - nowMs;
+    const mins = Math.floor(diff / 60000);
+    const hrs = Math.floor(mins / 60);
+    const remainMins = mins % 60;
+    let countdown = hrs > 0 ? hrs + 'h ' + remainMins + 'min' : mins + ' min';
+    return '<div class="alarm-card"><div class="alarm-icon">&#x23F0;</div><div class="alarm-info"><div class="alarm-text">' + escapeHtml(a.text) + '</div><div class="alarm-datetime">' + dt.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}) + ' a las ' + String(dt.getHours()).padStart(2,'0') + ':' + String(dt.getMinutes()).padStart(2,'0') + '</div><div class="alarm-cat">' + CAT_LABELS[a.category] + '</div></div><div class="alarm-countdown">En ' + countdown + '</div><button class="btn-cancel-alarm" onclick="cancelAlarm(' + a.id + ')">Cancelar</button></div>';
+  }).join('');
 }
 
 function escapeHtml(t) {
@@ -297,6 +596,7 @@ function resetAll() {
   if (!confirm('Borrar todo el historial?')) return;
   tasks = [];
   completed = [];
+  alarms = [];
   save();
   render();
   resetTimer();
@@ -311,8 +611,7 @@ function resetTimer() {
 function updateTimerBadge() {
   const m = Math.floor(timerSeconds / 60);
   const s = timerSeconds % 60;
-  const badge = document.getElementById('timerBadge');
-  badge.textContent = '\u23F0 Recordatorio: ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  document.getElementById('timerBadge').textContent = 'Recordatorio: ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
 }
 
 function startTimer() {
@@ -325,6 +624,7 @@ function startTimer() {
       timerSeconds = 600;
     }
   }, 1000);
+  alarmCheckInterval = setInterval(checkAlarms, 10000);
 }
 
 function triggerReminder() {
@@ -332,10 +632,8 @@ function triggerReminder() {
     speak('No hay pendientes. Todo listo.');
     return;
   }
-
   const toast = document.getElementById('toast');
   const toastList = document.getElementById('toastList');
-
   const byCat = {};
   CATEGORIES.forEach(c => { byCat[c] = tasks.filter(t => t.category === c); });
 
@@ -343,9 +641,9 @@ function triggerReminder() {
   let items = '';
   CATEGORIES.forEach(cat => {
     if (byCat[cat].length > 0) {
-      items += '<li><strong>' + CAT_ICONS[cat] + ' ' + CAT_LABELS[cat] + ' (' + byCat[cat].length + '):</strong></li>';
+      items += '<li><strong>' + CAT_LABELS[cat] + ' (' + byCat[cat].length + ')</strong></li>';
       byCat[cat].forEach(t => {
-        items += '<li style="padding-left:24px">' + escapeHtml(t.text) + '</li>';
+        items += '<li style="padding-left:16px">' + escapeHtml(t.text) + '</li>';
         msg += CAT_LABELS[cat] + ': ' + t.text + '. ';
       });
     }
@@ -354,10 +652,16 @@ function triggerReminder() {
   toastList.innerHTML = items;
   toast.classList.add('show');
   speak(msg);
-  try { new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH+JkI2Gf3V1goqOjYmFf3d4goqOjYmFf3h5hIqPjYmGfnh5hIqPjYmGfnh6hoqQjYmGfnh6hoyRjYmGf3l6h4ySjYqHf3l7h4ySjYqHgHp7h4ySjYqIgHt8iI2TjYqIgHt8iI2TjYqJgHx9iY6UjYqJgHx9iY6UjYqJgH1+io+VjouKgH1+io+VjouKgH1/io+VjouKgH2AipCWj4uKgH2AipCWj4uLgH6BipGXkIuLgH6BipGXkIyMgH+BipKXkYyMgH+BipKXkYyNgH+BipKYko2NgH+BipKYko2NgH+BipKZko2NgH+BipKZko6OgH+CipKZko6OgH+CipKZko6OgH+Ei5Oako6OgH+Ei5Oako+PgH+Ei5OalI+QgH+Ei5OalI+QgH+Fi5SalI+QgH+Fi5SalI+RgH+Fi5SblI+RgH+Fi5SblI+RgH+Gi5WblI+RgH+Gi5WblZCSgH+Gi5WblZCSgH+Hi5WblZCTh4CIjJacmJGUh4CIjJacmJGUh4CJjZedmpGVh4CJjZedmpGVh4CKjpifnJOWiICKjpmfnJOWiICKjpqgnZSXiYCJjpqfnZSYioGKj5ugnpWYioGKj5yhn5aZi4GLkJ2in5eajIGLkJ6jn5eajIGMkZ+kn5iZjYGMkZ+kn5iZjYGNkqCmn5majYGNkqCmn5majYGOlKGnn5majYGOlKGnn5qcgY6WoqeenJqcgY6WoqeenZyeg4+XpKqfnZyeg4+XpKqfnp2fhI+Ypqugnp2fhI+Ypqugnp6ghJCZp6yhnp6ghJCZp6yhnp+hhZGaqK2in5+hhZGaqK2in5+ihpKbqa6in5+ihpKbqa6joKCjh5Ocq7Cin6Cjh5Ocq7Cin6Gkh5WdrbGin6Gkh5WdrbKioaKliJadrbKioaKliJadr7OioqOmiZqer7OioqOmiZqfr7Sio6Snipqfr7Sio6SnipqgsLWjpKWpi5ygsLWjpKWpi5yhtLakpaepjZ+htLakpaeqjqCjtbimpqiqj6Cjtbimpqiqj6GktraopqeqlKGktrqoqKeqlqKmtrypqaerl6Omtrypqaerl6Sot7yqqaiqmKSox7yqqaiqmKWpyL2rqqirmaWpyL2rqqirmaapyr6srKmrmqapy7+trKmrm6eryL+uramrnKeryL+uramrnaeszMGvrqqsnaeszMGvrqqtobCwr6qsn6Owraa1ta61ta62uLGyt7K0t7GzubO1ubW2ura3t7e4uLe4ubm5ubq5ubq6ubq6ubq6ubq6ubq6ubu7u7u7u7u7u7u7u7u7u7u7vLy8vLy9vb29vb6+vr6+v7+/v7+/v7+/v7/AwMDAwMHBwcHBwsLCwsLCw8PDw8PExMTExMXFxcXFxcbGxsbGx8fHx8fIyMjIyMnJycnJysrKysrLy8vLy8zMzMzMysrKysrNzc3Nzc7Ozs7Oz8/Pz8/Q0NDQ0MvLy8vLzMzMzMzPz8/P0NDQ0NDNzc3Nzc/Pz8/P0dHR0dHOzs7OztDQ0NDR0dHR0dHS0tLS0tPT09PT09PT09PT09PT1NTU1NTV1dXV1dbW1tbW19fX19fY2NjY2M3Nzc3N0NDQ0NDR0dHR0tLS0tLS0tPT09PT1NTU1NTW1tbW1tbW1tbX19fX19jY2NjYzc3Nzc3Q0NDQ0NHR0dHS0tLS0tLS09PT09PU1NTU1NbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09TU1NTU1tbW1tbW1tbW19fX19fY2NjY2M3Nzc3N0NDQ0NDR0dHR0tLS0tLS09PT09PU1NTU1NbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09TU1NTU1tbW1tbW1tbW19fX19fY2NjY2M3Nzc3N0NDQ0NDR0dHR0tLS0tLS09PT09PU1NTU1NbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09TU1NTU1tbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09P', 'audio/wav').play().catch(()=>{}); } catch(e) {}
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  try {
+    const notifSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH+JkI2Gf3V1goqOjYmFf3d4goqOjYmFf3h5hIqPjYmGfnh5hIqPjYmGfnh6hoqQjYmGfnh6hoyRjYmGf3l6h4ySjYqHf3l7h4ySjYqHgHp7h4ySjYqIgHt8iI2TjYqIgHt8iI2TjYqJgHx9iY6UjYqJgHx9iY6UjYqJgH1+io+VjouKgH1+io+VjouKgH1/io+VjouKgH2AipCWj4uKgH2AipCWj4uLgH6BipGXkIuLgH6BipGXkIyMgH+BipKXkYyMgH+BipKXkYyNgH+BipKYko2NgH+BipKYko2NgH+BipKZko2NgH+BipKZko6OgH+CipKZko6OgH+CipKZko6OgH+Ei5Oako6OgH+Ei5Oako+PgH+Ei5OalI+QgH+Ei5OalI+QgH+Fi5SalI+QgH+Fi5SalI+RgH+Fi5SblI+RgH+Fi5SblI+RgH+Gi5WblI+RgH+Gi5WblZCSgH+Gi5WblZCSgH+Hi5WblZCTh4CIjJacmJGUh4CIjJacmJGUh4CJjZedmpGVh4CJjZedmpGVh4CKjpifnJOWiICKjpmfnJOWiICKjpqgnZSXiYCJjpqfnZSYioGKj5ugnpWYioGKj5yhn5aZi4GLkJ2in5eajIGLkJ6jn5eajIGMkZ+kn5iZjYGMkZ+kn5iZjYGNkqCmn5majYGNkqCmn5majYGOlKGnn5majYGOlKGnn5qcgY6WoqeenJqcgY6WoqeenZyeg4+XpKqfnZyeg4+XpKqfnp2fhI+Ypqugnp2fhI+Ypqugnp6ghJCZp6yhnp6ghJCZp6yhnp+hhZGaqK2in5+hhZGaqK2in5+ihpKbqa6in5+ihpKbqa6joKCjh5Ocq7Cin6Cjh5Ocq7Cin6Gkh5WdrbGin6Gkh5WdrbKioaKliJadrbKioaKliJadr7OioqOmiZqer7OioqOmiZqfr7Sio6Snipqfr7Sio6SnipqgsLWjpKWpi5ygsLWjpKWpi5yhtLakpaepjZ+htLakpaeqjqCjtbimpqiqj6Cjtbimpqiqj6GktraopqeqlKGktrqoqKeqlqKmtrypqaerl6Omtrypqaerl6Sot7yqqaiqmKSox7yqqaiqmKWpyL2rqqirmaWpyL2rqqirmaapyr6srKmrmqapy7+trKmrm6eryL+uramrnKeryL+uramrnaeszMGvrqqsnaeszMGvrqqtobCwr6qsn6Owraa1ta61ta62uLGyt7K0t7GzubO1ubW2ura3t7e4uLe4ubm5ubq5ubq6ubq6ubq6ubq6ubq6ubu7u7u7u7u7u7u7u7u7u7u7vLy8vLy9vb29vb6+vr6+v7+/v7+/v7+/v7/AwMDAwMHBwcHBwsLCwsLCw8PDw8PExMTExMXFxcXFxcbGxsbGx8fHx8fIyMjIyMnJycnJysrKysrLy8vLy8zMzMzMysrKysrNzc3Nzc7Ozs7Oz8/Pz8/Q0NDQ0MvLy8vLzMzMzMzPz8/P0NDQ0NDNzc3Nzc/Pz8/P0dHR0dHOzs7OztDQ0NDR0dHR0dHS0tLS0tPT09PT09PT09PT09PT1NTU1NTV1dXV1dbW1tbW19fX19fY2NjY2M3Nzc3N0NDQ0NDR0dHR0tLS0tLS0tPT09PT1NTU1NTW1tbW1tbW1tbX19fX19jY2NjYzc3Nzc3Q0NDQ0NHR0dHS0tLS0tLS09PT09PU1NTU1NbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09TU1NTU1tbW1tbW1tbW19fX19fY2NjY2M3Nzc3N0NDQ0NDR0dHR0tLS0tLS09PT09PU1NTU1NbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09PQ==');
+    notifSound.volume = 0.5;
+    notifSound.play().catch(() => {});
+  } catch(e) {}
 }
 
-function closeToast() {
+function closeToast(e) {
+  if (e && e.target !== e.currentTarget) return;
   document.getElementById('toast').classList.remove('show');
 }
 
@@ -366,55 +670,69 @@ function speak(text) {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'es-ES';
-    u.rate = 1.1;
+    u.rate = 1.05;
     window.speechSynthesis.speak(u);
   }
 }
 
 function toggleVoice() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { alert('Tu navegador no soporta reconocimiento de voz. Usa Chrome.'); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { document.getElementById('micStatus').textContent = 'Navegador no compatible. Usa Chrome.'; return; }
 
   if (isRecording) {
     recognition.stop();
-    isRecording = false;
-    document.getElementById('voiceBtn').classList.remove('recording');
     return;
   }
 
-  recognition = new SpeechRecognition();
+  recognition = new SR();
   recognition.lang = 'es-ES';
   recognition.continuous = false;
-  recognition.interimResults = false;
+  recognition.interimResults = true;
 
   recognition.onstart = () => {
     isRecording = true;
-    document.getElementById('voiceBtn').classList.add('recording');
+    document.getElementById('micBtn').classList.add('recording');
+    document.getElementById('micStatus').textContent = 'Escuchando...';
+    document.getElementById('micStatus').className = 'mic-status listening';
   };
 
   recognition.onresult = (e) => {
-    const transcript = e.results[0][0].transcript.trim().toLowerCase();
-    if (transcript === 'listo' || transcript.startsWith('listo')) {
-      const cat = document.getElementById('categorySelect').value;
-      completeAllFromCategory(cat);
-    } else if (transcript.startsWith('agregar ') || transcript.startsWith('nuevo ') || transcript.startsWith('nueva ')) {
-      const cleaned = transcript.replace(/^(agregar|nuevo|nueva)\s+/i, '');
-      document.getElementById('taskInput').value = cleaned;
-      addTask();
-    } else {
-      document.getElementById('taskInput').value = transcript;
-      addTask();
+    let transcript = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      transcript += e.results[i][0].transcript;
+    }
+    document.getElementById('micStatus').textContent = '"' + transcript + '"';
+    document.getElementById('micStatus').className = 'mic-status transcript';
+
+    if (e.results[e.results.length - 1].isFinal) {
+      const final = transcript.trim().toLowerCase();
+      if (final === 'listo' || final.startsWith('listo')) {
+        const cat = document.getElementById('categorySelect').value;
+        completeAllFromCategory(cat);
+      } else if (final.startsWith('agregar ') || final.startsWith('nuevo ') || final.startsWith('nueva ')) {
+        document.getElementById('taskInput').value = transcript.trim().replace(/^(agregar|nuevo|nueva)\s+/i, '');
+        addTask();
+      } else {
+        document.getElementById('taskInput').value = transcript.trim();
+        addTask();
+      }
     }
   };
 
   recognition.onend = () => {
     isRecording = false;
-    document.getElementById('voiceBtn').classList.remove('recording');
+    document.getElementById('micBtn').classList.remove('recording');
+    setTimeout(() => {
+      document.getElementById('micStatus').textContent = 'Toca para activar el micrófono';
+      document.getElementById('micStatus').className = 'mic-status';
+    }, 1500);
   };
 
-  recognition.onerror = (e) => {
+  recognition.onerror = () => {
     isRecording = false;
-    document.getElementById('voiceBtn').classList.remove('recording');
+    document.getElementById('micBtn').classList.remove('recording');
+    document.getElementById('micStatus').textContent = 'Error. Toca para reintentar';
+    document.getElementById('micStatus').className = 'mic-status';
   };
 
   recognition.start();
