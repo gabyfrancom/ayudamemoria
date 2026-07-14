@@ -1,6 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0a0e1a">
+<link rel="manifest" href="/manifest.json">
+<title>Ayuda Memoria</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{height:100%;overflow-x:hidden}
+  body{font-family:'Inter',system-ui,sans-serif;background:#0a0e1a;color:#e2e8f0;min-height:100%;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  .bg-glow{position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(99,102,241,.12) 0%,transparent 70%);pointer-events:none;z-index:0}
+  header{background:rgba(15,20,35,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.06);position:sticky;top:0;z-index:100}
+  header h1{font-size:1.1rem;font-weight:800;background:linear-gradient(135deg,#818cf8,#c084fc,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .header-right{display:flex;gap:6px;align-items:center}
+  .timer-badge{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.35);border-radius:16px;padding:4px 10px;font-size:.7rem;font-weight:700;color:#4ade80;display:flex;align-items:center;gap:4px;transition:all .3s}
+  .timer-badge .dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:dotPulse 2s infinite}
+  @keyframes dotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+  .btn-reset{background:none;border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:.65rem;font-weight:600;transition:all .2s}
+  .btn-reset:hover,.btn-reset:active{background:rgba(239,68,68,.15)}
+  .container{max-width:960px;margin:0 auto;padding:12px 12px 80px;position:relative;z-index:1}
+  .mic-section{background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(168,85,247,.08));border:1px solid rgba(129,140,248,.12);border-radius:14px;padding:16px 14px;margin-bottom:14px;text-align:center}
+  .mic-section h2{font-size:.75rem;color:#a5b4fc;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:12px}
+  .mic-row{display:flex;align-items:center;gap:14px;justify-content:center}
+  .mic-visual{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a855f7);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;position:relative;border:none;color:#fff;flex-shrink:0}
+  .mic-visual:active{transform:scale(.95)}
+  .mic-visual.recording{animation:micPulse 1.2s infinite;background:linear-gradient(135deg,#ef4444,#f97316)}
+  .mic-visual.recording::before{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid rgba(239,68,68,.4);animation:micRing 1.2s infinite}
+  .mic-visual.recording::after{content:'';position:absolute;inset:-12px;border-radius:50%;border:1px solid rgba(239,68,68,.2);animation:micRing 1.2s .3s infinite}
+  @keyframes micPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  @keyframes micRing{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.3)}}
+  .mic-info{text-align:left}
+  .mic-info .title{font-size:.85rem;font-weight:600;color:#c4b5fd}
+  .mic-status{font-size:.75rem;color:#64748b;margin-top:2px;min-height:18px}
+  .mic-status.listening{color:#f87171;font-weight:600;animation:blink 1s infinite}
+  .mic-status.transcript{color:#a5b4fc;font-style:italic}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  .mic-hints{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+  .mic-hint{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:2px 8px;font-size:.65rem;color:#475569}
+  .input-section{background:rgba(30,41,59,.5);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px;margin-bottom:14px}
+  .input-main{display:flex;gap:8px}
+  .input-main select{background:rgba(15,23,42,.9);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 8px;color:#e2e8f0;font-size:.85rem;outline:none;cursor:pointer;font-family:inherit;-webkit-appearance:none;appearance:none;min-width:0}
+  .input-main input[type="text"]{flex:1;min-width:0;background:rgba(15,23,42,.9);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;color:#e2e8f0;font-size:.9rem;outline:none;font-family:inherit}
+  .input-main input:focus,.input-main select:focus{border-color:#818cf8}
+  .btn-add{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:.85rem;white-space:nowrap;font-family:inherit;flex-shrink:0}
+  .btn-add:active{transform:scale(.97)}
+  .alarm-toggle-row{display:flex;align-items:center;gap:6px;margin-top:10px;padding:0 2px}
+  .alarm-toggle-row label{font-size:.78rem;color:#94a3b8;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .alarm-toggle-row input[type="checkbox"]{accent-color:#818cf8;width:15px;height:15px;cursor:pointer}
+  .alarm-fields{display:none;gap:8px;margin-top:10px;align-items:center;flex-wrap:wrap}
+  .alarm-fields.show{display:flex}
+  .alarm-fields input[type="date"],.alarm-fields input[type="time"]{background:rgba(15,23,42,.9);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:7px 10px;color:#e2e8f0;font-size:.8rem;outline:none;font-family:inherit;color-scheme:dark;flex:1;min-width:120px}
+  .alarm-fields .alarm-tag{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);color:#fbbf24;border-radius:10px;padding:2px 8px;font-size:.65rem;font-weight:600;white-space:nowrap}
+  .categories{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:600px){.categories{grid-template-columns:1fr}}
+  .category{background:rgba(30,41,59,.4);border:1px solid rgba(255,255,255,.05);border-radius:12px;overflow:hidden}
+  .cat-header{padding:10px 12px;display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:.85rem}
+  .cat-header .label{display:flex;align-items:center;gap:5px}
+  .cat-header .count{border-radius:16px;padding:2px 8px;font-size:.65rem;font-weight:700;min-width:24px;text-align:center}
+  .cat-body{padding:0 8px 8px;min-height:32px;max-height:260px;overflow-y:auto}
+  .cat-body::-webkit-scrollbar{width:2px}
+  .cat-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:4px}
+  .cat-pedidos .cat-header{border-bottom:2px solid rgba(251,191,36,.25)}
+  .cat-pedidos .count{background:rgba(251,191,36,.12);color:#fbbf24}
+  .cat-pedidos{background:linear-gradient(180deg,rgba(251,191,36,.04),transparent)}
+  .cat-mails .cat-header{border-bottom:2px solid rgba(96,165,250,.25)}
+  .cat-mails .count{background:rgba(96,165,250,.12);color:#60a5fa}
+  .cat-mails{background:linear-gradient(180deg,rgba(96,165,250,.04),transparent)}
+  .cat-llamadas .cat-header{border-bottom:2px solid rgba(192,132,252,.25)}
+  .cat-llamadas .count{background:rgba(192,132,252,.12);color:#c084fc}
+  .cat-llamadas{background:linear-gradient(180deg,rgba(192,132,252,.04),transparent)}
+  .cat-pendientes .cat-header{border-bottom:2px solid rgba(251,113,133,.25)}
+  .cat-pendientes .count{background:rgba(251,113,133,.12);color:#fb7185}
+  .cat-pendientes{background:linear-gradient(180deg,rgba(251,113,133,.04),transparent)}
+  .item{display:flex;align-items:center;gap:6px;padding:8px 10px;background:rgba(15,23,42,.4);border-radius:10px;margin-bottom:4px;transition:all .2s;border:1px solid transparent;animation:slideUp .25s ease}
+  @keyframes slideUp{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+  .item:active{background:rgba(30,41,59,.6)}
+  .item .text{flex:1;font-size:.82rem;word-break:break-word;line-height:1.3}
+  .item .meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
+  .item .time{font-size:.6rem;color:#475569}
+  .item .alarm-badge{font-size:.55rem;background:rgba(251,191,36,.12);color:#fbbf24;padding:1px 5px;border-radius:6px;font-weight:600}
+  .item-actions{display:flex;gap:4px;flex-shrink:0}
+  .item .btn-done{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;transition:all .2s}
+  .item .btn-done:active{transform:scale(.9)}
+  .item .btn-delete{width:28px;height:28px;border-radius:50%;background:none;border:1px solid rgba(255,255,255,.06);color:#475569;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.75rem;transition:all .2s}
+  .item .btn-delete:active{color:#f87171;border-color:rgba(239,68,68,.3)}
+  .alarms-section{margin-top:16px}
+  .alarms-header{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+  .alarms-header h3{font-size:.85rem;color:#fbbf24;font-weight:700}
+  .alarms-header .badge{background:rgba(251,191,36,.12);color:#fbbf24;border-radius:10px;padding:2px 7px;font-size:.65rem;font-weight:700}
+  .alarm-card{background:linear-gradient(135deg,rgba(251,191,36,.05),rgba(251,191,36,.02));border:1px solid rgba(251,191,36,.12);border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;animation:slideUp .25s ease}
+  .alarm-card .alarm-icon{font-size:1.2rem;flex-shrink:0}
+  .alarm-card .alarm-info{flex:1;min-width:0}
+  .alarm-card .alarm-text{font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .alarm-card .alarm-datetime{font-size:.7rem;color:#fbbf24;margin-top:2px}
+  .alarm-card .alarm-cat{font-size:.6rem;color:#64748b}
+  .alarm-card .alarm-countdown{font-size:.7rem;font-weight:700;color:#fbbf24;white-space:nowrap;flex-shrink:0}
+  .alarm-card .btn-cancel-alarm{background:none;border:1px solid rgba(239,68,68,.25);color:#f87171;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:.65rem;flex-shrink:0}
+  .alarm-card .btn-cancel-alarm:active{background:rgba(239,68,68,.15)}
+  .completed-section{margin-top:18px}
+  .completed-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 0}
+  .completed-header h3{font-size:.85rem;color:#475569}
+  .completed-header .arrow{transition:transform .3s;color:#475569;font-size:.7rem}
+  .completed-header .arrow.open{transform:rotate(180deg)}
+  .completed-list{display:none;max-height:220px;overflow-y:auto}
+  .completed-list.show{display:block;animation:slideUp .25s ease}
+  .completed-item{display:flex;align-items:center;gap:6px;padding:5px 8px;font-size:.75rem;color:#475569;text-decoration:line-through;border-bottom:1px solid rgba(255,255,255,.03)}
+  .completed-item .cat-tag{font-size:.55rem;padding:2px 5px;border-radius:4px;text-transform:uppercase;font-weight:700;letter-spacing:.3px;flex-shrink:0}
+  .tag-pedidos{background:rgba(251,191,36,.08);color:#fbbf24}
+  .tag-mails{background:rgba(96,165,250,.08);color:#60a5fa}
+  .tag-llamadas{background:rgba(192,132,252,.08);color:#c084fc}
+  .tag-pendientes{background:rgba(251,113,133,.08);color:#fb7185}
+  .completed-item .btn-undo{background:none;border:none;color:#64748b;cursor:pointer;font-size:.75rem;flex-shrink:0;padding:2px 4px}
+  .empty-state{text-align:center;padding:12px;color:#2d3a50;font-size:.75rem}
+  .toast-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:300;display:none;align-items:center;justify-content:center;padding:16px}
+  .toast-overlay.show{display:flex;animation:fadeIn .3s}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .toast-box{background:linear-gradient(135deg,#1e293b,#0f172a);border:1px solid rgba(251,191,36,.3);border-radius:18px;padding:20px;max-width:380px;width:100%;max-height:65vh;overflow-y:auto;animation:popIn .4s ease}
+  @keyframes popIn{from{opacity:0;transform:scale(.9) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+  .toast-box .toast-icon{font-size:2.2rem;text-align:center;margin-bottom:6px;animation:bounce .6s ease}
+  @keyframes bounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-10px)}60%{transform:translateY(-5px)}}
+  .toast-box h3{text-align:center;color:#fbbf24;font-size:1rem;margin-bottom:2px}
+  .toast-box .toast-sub{text-align:center;color:#64748b;font-size:.75rem;margin-bottom:14px}
+  .toast-box ul{list-style:none;padding:0}
+  .toast-box li{padding:4px 0;font-size:.82rem;border-bottom:1px solid rgba(255,255,255,.03)}
+  .toast-box li strong{font-size:.7rem}
+  .toast-box .toast-actions{margin-top:14px;text-align:center}
+  .toast-btn{border:none;border-radius:10px;padding:10px 28px;font-weight:700;cursor:pointer;font-size:.82rem;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-family:inherit}
+  .toast-btn:active{transform:scale(.97)}
+  .alarm-ring-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:400;display:none;align-items:center;justify-content:center;padding:16px}
+  .alarm-ring-overlay.show{display:flex}
+  .alarm-ring-box{background:linear-gradient(135deg,#1a1030,#0f172a);border:2px solid rgba(251,191,36,.5);border-radius:20px;padding:24px;max-width:340px;width:100%;text-align:center;animation:popIn .5s ease;box-shadow:0 0 60px rgba(251,191,36,.15)}
+  .alarm-ring-box .ring-icon{font-size:3.5rem;animation:ringShake .5s ease infinite alternate}
+  @keyframes ringShake{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
+  .alarm-ring-box h2{color:#fbbf24;font-size:1.2rem;margin:10px 0 4px}
+  .alarm-ring-box .ring-text{color:#e2e8f0;font-size:.95rem;margin-bottom:4px}
+  .alarm-ring-box .ring-cat{color:#94a3b8;font-size:.75rem;margin-bottom:4px}
+  .alarm-ring-box .ring-time{color:#fbbf24;font-size:.7rem;margin-bottom:18px}
+  .alarm-ring-box .ring-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .btn-snooze{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);color:#fbbf24;border-radius:10px;padding:10px 20px;font-weight:700;cursor:pointer;font-size:.82rem;font-family:inherit}
+  .btn-snooze:active{background:rgba(251,191,36,.25)}
+  .btn-dismiss-alarm{background:linear-gradient(135deg,#22c55e,#16a34a);border:none;color:#fff;border-radius:10px;padding:10px 20px;font-weight:700;cursor:pointer;font-size:.82rem;font-family:inherit}
+  .btn-dismiss-alarm:active{transform:scale(.97)}
+  .status-bar{text-align:center;padding:10px;color:#2d3a50;font-size:.68rem;margin-top:16px;letter-spacing:.5px}
+  .fab{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a855f7);border:none;color:#fff;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 20px rgba(99,102,241,.4);z-index:50;display:none;align-items:center;justify-content:center;transition:all .2s}
+  .fab:active{transform:scale(.92)}
+  @media(max-width:600px){.fab{display:flex}}
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+
+<header>
+  <h1>Ayuda Memoria</h1>
+  <div class="header-right">
+    <div class="timer-badge active" id="timerBadge"><span class="dot"></span><span id="timerText">10:00</span></div>
+    <button class="btn-reset" onclick="resetAll()">Limpiar</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="mic-section">
+    <h2>Dictado por voz</h2>
+    <div class="mic-row">
+      <button class="mic-visual" id="micBtn" onclick="toggleVoice()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+      <div class="mic-info">
+        <div class="title">Habla ahora</div>
+        <div class="mic-status" id="micStatus">Toca el microfono para empezar</div>
+      </div>
+    </div>
+    <div class="mic-hints">
+      <span class="mic-hint">"agregar llamar a Juan"</span>
+      <span class="mic-hint">"listo"</span>
+      <span class="mic-hint">"nueva reunion 3pm"</span>
+    </div>
+  </div>
+
+  <div class="input-section">
+    <div class="input-main">
+      <select id="categorySelect">
+        <option value="pedidos">Pedidos</option>
+        <option value="mails">Mails</option>
+        <option value="llamadas">Llamadas</option>
+        <option value="pendientes">Pendientes</option>
+      </select>
+      <input type="text" id="taskInput" placeholder="Escribe tu pendiente..." onkeydown="if(event.key==='Enter')addTask()">
+      <button class="btn-add" onclick="addTask()">+ Agregar</button>
+    </div>
+    <div class="alarm-toggle-row">
+      <label><input type="checkbox" id="alarmCheck" onchange="toggleAlarmFields()"> Alarma</label>
+    </div>
+    <div class="alarm-fields" id="alarmFields">
+      <input type="date" id="alarmDate">
+      <input type="time" id="alarmTime">
+      <span class="alarm-tag" id="alarmPreview"></span>
+    </div>
+  </div>
+
+  <div class="categories">
+    <div class="category cat-pedidos">
+      <div class="cat-header"><span class="label">Pedidos</span><span class="count" id="count-pedidos">0</span></div>
+      <div class="cat-body" id="list-pedidos"></div>
+    </div>
+    <div class="category cat-mails">
+      <div class="cat-header"><span class="label">Mails</span><span class="count" id="count-mails">0</span></div>
+      <div class="cat-body" id="list-mails"></div>
+    </div>
+    <div class="category cat-llamadas">
+      <div class="cat-header"><span class="label">Llamadas</span><span class="count" id="count-llamadas">0</span></div>
+      <div class="cat-body" id="list-llamadas"></div>
+    </div>
+    <div class="category cat-pendientes">
+      <div class="cat-header"><span class="label">Pendientes</span><span class="count" id="count-pendientes">0</span></div>
+      <div class="cat-body" id="list-pendientes"></div>
+    </div>
+  </div>
+
+  <div class="alarms-section" id="alarmsSection" style="display:none">
+    <div class="alarms-header"><h3>Alarmas</h3><span class="badge" id="alarmsCount">0</span></div>
+    <div id="alarmsList"></div>
+  </div>
+
+  <div class="completed-section">
+    <div class="completed-header" onclick="toggleCompleted()">
+      <h3>Realizados (<span id="count-completed">0</span>)</h3>
+      <span class="arrow" id="arrow">&#x25BC;</span>
+    </div>
+    <div class="completed-list" id="completedList"></div>
+  </div>
+
+  <div class="status-bar" id="statusBar">Sin pendientes</div>
+</div>
+
+<button class="fab" id="fabBtn" onclick="document.getElementById('taskInput').focus();document.getElementById('taskInput').scrollIntoView({behavior:'smooth',block:'center'})">+</button>
+
+<div class="toast-overlay" id="toast" onclick="closeToast(event)">
+  <div class="toast-box" onclick="event.stopPropagation()">
+    <div class="toast-icon">&#x1F514;</div>
+    <h3>Recordatorio</h3>
+    <div class="toast-sub">Tienes pendientes sin resolver</div>
+    <ul id="toastList"></ul>
+    <div class="toast-actions"><button class="toast-btn" onclick="closeToast()">Entendido</button></div>
+  </div>
+</div>
+
+<div class="alarm-ring-overlay" id="alarmRing">
+  <div class="alarm-ring-box">
+    <div class="ring-icon">&#x23F0;</div>
+    <h2 id="ringTitle">Alarma</h2>
+    <div class="ring-text" id="ringText"></div>
+    <div class="ring-cat" id="ringCat"></div>
+    <div class="ring-time" id="ringTime"></div>
+    <div class="ring-actions">
+      <button class="btn-snooze" onclick="snoozeAlarm()">Posponer 5 min</button>
+      <button class="btn-dismiss-alarm" onclick="dismissAlarm()">Marcar listo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'reminder') triggerReminder();
+    else if (e.data && e.data.type === 'alarm' && e.data.alarm) triggerAlarmRing(e.data.alarm);
+  });
+}
+if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+
 // ===== TIMESTAMP-BASED TIMER =====
-// Ya no usa Web Worker (muere en background).
-// Usa timestamp absoluto guardado en localStorage.
 function getTimerState() {
   const t = JSON.parse(localStorage.getItem('am_ts') || '{"remaining":600,"startAt":0}');
   if (!t.startAt) t.startAt = Date.now();
@@ -11,20 +288,13 @@ function saveTimerState(remaining) {
 }
 
 let remaining = 600;
-let timerStartAt = Date.now();
 let timerInterval = null;
 
 function startTimer() {
-  // Intentar recuperar estado previo
   const ts = getTimerState();
   const elapsed = Math.floor((Date.now() - ts.startAt) / 1000);
   remaining = Math.max(0, ts.remaining - elapsed);
-  
-  if (remaining <= 0) {
-    // Se perdió un recordatorio mientras no se usaba la app
-    remaining = 0;
-  }
-  
+  if (remaining <= 0) remaining = 0;
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     remaining--;
@@ -36,14 +306,12 @@ function startTimer() {
       saveTimerState(remaining);
     }
   }, 1000);
-  
   requestWakeLock();
   syncSW();
 }
 
 function resetTimer() {
   remaining = 600;
-  timerStartAt = Date.now();
   saveTimerState(remaining);
   updateTimerBadge();
   syncSW();
@@ -57,15 +325,10 @@ function updateTimerBadge() {
 
 function syncSW() {
   if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({
-      type: 'sync',
-      startAt: timerStartAt,
-      alarms: alarms
-    });
+    navigator.serviceWorker.controller.postMessage({ type: 'sync', startAt: Date.now(), alarms: alarms });
   }
 }
 
-// ===== WAKE LOCK =====
 let wakeLock = null;
 async function requestWakeLock() {
   try {
@@ -76,15 +339,13 @@ async function requestWakeLock() {
   } catch(e) {}
 }
 
-// ===== CATCH-UP AL VOLVER DE PANTALLA APAGADA =====
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     const ts = getTimerState();
     const elapsed = Math.floor((Date.now() - ts.startAt) / 1000);
     if (ts.remaining - elapsed <= 0 && remaining > 0) {
-      // Se perdió un recordatorio mientras no se veía la app
       triggerReminder();
-      remaining = 600 - Math.abs(ts.remaining - elapsed) % 600;
+      remaining = 600 - (Math.abs(ts.remaining - elapsed) % 600);
       saveTimerState(remaining);
       updateTimerBadge();
     } else {
@@ -98,14 +359,139 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-// ===== SW MESSAGES =====
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('message', (e) => {
-    if (e.data && e.data.type === 'reminder') {
-      triggerReminder();
-    } else if (e.data && e.data.type === 'alarm') {
-      const alarm = e.data.alarm;
-      if (alarm) triggerAlarmRing(alarm);
-    }
-  });
+// ===== DATA =====
+const CATS=['pedidos','mails','llamadas','pendientes'];
+const CAT_L={pedidos:'Pedidos',mails:'Mails',llamadas:'Llamadas',pendientes:'Pendientes'};
+let tasks=JSON.parse(localStorage.getItem('am_t')||'[]');
+let completed=JSON.parse(localStorage.getItem('am_c')||'[]');
+let alarms=JSON.parse(localStorage.getItem('am_a')||'[]');
+let completedOpen=false;
+let recognition=null;
+let isRecording=false;
+let currentAlarmId=null;
+let alarmAudio=null;
+
+function save(){localStorage.setItem('am_t',JSON.stringify(tasks));localStorage.setItem('am_c',JSON.stringify(completed));localStorage.setItem('am_a',JSON.stringify(alarms))}
+
+function addTask(){
+  const input=document.getElementById('taskInput');
+  const cat=document.getElementById('categorySelect').value;
+  const text=input.value.trim();
+  if(!text)return;
+  if(text.toLowerCase()==='listo'){completeAllFromCategory(cat);input.value='';return}
+  const task={id:Date.now(),text,category:cat,time:new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})};
+  if(document.getElementById('alarmCheck').checked){
+    const d=document.getElementById('alarmDate').value;
+    const t=document.getElementById('alarmTime').value;
+    if(d&&t){const alarmTime=new Date(d+'T'+t);if(alarmTime>Date.now()){task.alarmId=Date.now()+1;alarms.push({id:task.alarmId,taskId:task.id,text,category:cat,datetime:alarmTime.toISOString(),triggered:false})}}
+    document.getElementById('alarmCheck').checked=false;document.getElementById('alarmFields').classList.remove('show');
+  }
+  tasks.push(task);input.value='';save();render();resetTimer();syncSW();speak(text+' agregado a '+CAT_L[cat]);
 }
+
+function completeTask(id){
+  const idx=tasks.findIndex(t=>t.id===id);if(idx===-1)return;const task=tasks.splice(idx,1)[0];
+  alarms=alarms.filter(a=>a.taskId!==id);completed.unshift({...task,completedAt:new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})});
+  save();render();syncSW();speak('Listo: '+task.text);
+}
+
+function undoTask(id){const idx=completed.findIndex(t=>t.id===id);if(idx===-1)return;const task=completed.splice(idx,1)[0];delete task.completedAt;tasks.push(task);save();render()}
+function deleteTask(id){tasks=tasks.filter(t=>t.id!==id);alarms=alarms.filter(a=>a.taskId!==id);save();render();syncSW()}
+
+function completeAllFromCategory(cat){
+  const ct=tasks.filter(t=>t.category===cat);if(!ct.length){speak('No hay '+CAT_L[cat]+' pendientes');return}
+  const ids=ct.map(t=>t.id);ct.forEach(t=>completed.unshift({...t,completedAt:new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}));
+  tasks=tasks.filter(t=>t.category!==cat);alarms=alarms.filter(a=>!ids.includes(a.taskId));save();render();syncSW();speak(ct.length+' '+CAT_L[cat]+' completados');
+}
+
+function cancelAlarm(id){alarms=alarms.filter(a=>a.id!==id);tasks.forEach(t=>{if(t.alarmId===id)delete t.alarmId});save();render();syncSW()}
+
+function snoozeAlarm(){
+  if(!currentAlarmId)return;const alarm=alarms.find(a=>a.id===currentAlarmId);
+  if(alarm){alarm.datetime=new Date(Date.now()+5*60000).toISOString();alarm.triggered=false}
+  stopAlarmSound();document.getElementById('alarmRing').classList.remove('show');currentAlarmId=null;save();render();syncSW();speak('Pospuesto 5 minutos');
+}
+
+function dismissAlarm(){
+  if(!currentAlarmId)return;const alarm=alarms.find(a=>a.id===currentAlarmId);
+  if(alarm){const task=tasks.find(t=>t.id===alarm.taskId);if(task)completeTask(task.id);alarms=alarms.filter(a=>a.id!==currentAlarmId)}
+  stopAlarmSound();document.getElementById('alarmRing').classList.remove('show');currentAlarmId=null;save();render();syncSW();speak('Alarma completada');
+}
+
+function triggerAlarmRing(alarm){
+  currentAlarmId=alarm.id;document.getElementById('ringTitle').textContent='Alarma!';document.getElementById('ringText').textContent=alarm.text;
+  document.getElementById('ringCat').textContent=CAT_L[alarm.category];document.getElementById('ringTime').textContent=new Date(alarm.datetime).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('alarmRing').classList.add('show');speak('Alarma: '+alarm.text);startAlarmSound();if(navigator.vibrate)navigator.vibrate([300,200,300,200,300]);
+}
+
+function startAlarmSound(){
+  stopAlarmSound();alarmAudio=new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH+JkI2Gf3V1goqOjYmFf3d4goqOjYmFf3h5hIqPjYmGfnh5hIqPjYmGfnh6hoqQjYmGfnh6hoyRjYmGf3l6h4ySjYqHf3l7h4ySjYqHgHp7h4ySjYqIgHt8iI2TjYqIgHt8iI2TjYqJgHx9iY6UjYqJgHx9iY6UjYqJgH1+io+VjouKgH1+io+VjouKgH1/io+VjouKgH2AipCWj4uKgH2AipCWj4uLgH6BipGXkIuLgH6BipGXkIyMgH+BipKXkYyMgH+BipKXkYyNgH+BipKYko2NgH+BipKYko2NgH+BipKZko2NgH+BipKZko6OgH+CipKZko6OgH+CipKZko6OgH+Ei5Oako6OgH+Ei5Oako+PgH+Ei5OalI+QgH+Ei5OalI+QgH+Fi5SalI+QgH+Fi5SalI+RgH+Fi5SblI+RgH+Fi5SblI+RgH+Gi5WblI+RgH+Gi5WblZCSgH+Gi5WblZCSgH+Hi5WblZCTh4CIjJacmJGUh4CIjJacmJGUh4CJjZedmpGVh4CJjZedmpGVh4CKjpifnJOWiICKjpmfnJOWiICKjpqgnZSXiYCJjpqfnZSYioGKj5ugnpWYioGKj5yhn5aZi4GLkJ2in5eajIGLkJ6jn5eajIGMkZ+kn5iZjYGMkZ+kn5iZjYGNkqCmn5majYGNkqCmn5majYGOlKGnn5majYGOlKGnn5qcgY6WoqeenJqcgY6WoqeenZyeg4+XpKqfnZyeg4+XpKqfnp2fhI+Ypqugnp2fhI+Ypqugnp6ghJCZp6yhnp6ghJCZp6yhnp+hhZGaqK2in5+hhZGaqK2in5+ihpKbqa6in5+ihpKbqa6joKCjh5Ocq7Cin6Cjh5Ocq7Cin6Gkh5WdrbGin6Gkh5WdrbKioaKliJadrbKioaKliJadr7OioqOmiZqer7OioqOmiZqfr7Sio6Snipqfr7Sio6SnipqgsLWjpKWpi5ygsLWjpKWpi5yhtLakpaepjZ+htLakpaeqjqCjtbimpqiqj6Cjtbimpqiqj6GktraopqeqlKGktrqoqKeqlqKmtrypqaerl6Omtrypqaerl6Sot7yqqaiqmKSox7yqqaiqmKWpyL2rqqirmaWpyL2rqqirmaapyr6srKmrmqapy7+trKmrm6eryL+uramrnKeryL+uramrnaeszMGvrqqsnaeszMGvrqqtobCwr6qsn6Owraa1ta61ta62uLGyt7K0t7GzubO1ubW2ura3t7e4uLe4ubm5ubq5ubq6ubq6ubq6ubq6ubq6ubu7u7u7u7u7u7u7u7u7u7u7vLy8vLy9vb29vb6+vr6+v7+/v7+/v7+/v7/AwMDAwMHBwcHBwsLCwsLCw8PDw8PExMTExMXFxcXFxcbGxsbGx8fHx8fIyMjIyMnJycnJysrKysrLy8vLy8zMzMzMysrKysrNzc3Nzc7Ozs7Oz8/Pz8/Q0NDQ0MvLy8vLzMzMzMzPz8/P0NDQ0NDNzc3Nzc/Pz8/P0dHR0dHOzs7OztDQ0NDR0dHR0dHS0tLS0tPT09PT09PT09PT09PT1NTU1NTV1dXV1dbW1tbW19fX19fY2NjY2M3Nzc3N0NDQ0NDR0dHR0tLS0tLS0tPT09PT1NTU1NTW1tbW1tbW1tbX19fX19jY2NjYzc3Nzc3Q0NDQ0NHR0dHS0tLS0tLS09PT09PU1NTU1NbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09TU1NTU1tbW1tbW1tbW19fX19fY2NjY2M3Nzc3N0NDQ0NDR0dHR0tLS0tLS09PT09PU1NTU1NbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09PQ==');
+  alarmAudio.loop=true;alarmAudio.volume=.7;alarmAudio.play().catch(()=>{});
+}
+function stopAlarmSound(){if(alarmAudio){alarmAudio.pause();alarmAudio=null}}
+
+function triggerReminder(){
+  if(!tasks.length){speak('No hay pendientes. Todo listo.');return}
+  const byCat={};CATS.forEach(c=>{byCat[c]=tasks.filter(t=>t.category===c)});
+  let msg='Tienes '+tasks.length+' pendiente'+(tasks.length>1?'s':'')+': ';let items='';
+  CATS.forEach(cat=>{if(byCat[cat].length){items+='<li><strong>'+CAT_L[cat]+' ('+byCat[cat].length+')</strong></li>';byCat[cat].forEach(t=>{items+='<li style="padding-left:14px">'+esc(t.text)+'</li>';msg+=CAT_L[cat]+': '+t.text+'. '})}});
+  document.getElementById('toastList').innerHTML=items;document.getElementById('toast').classList.add('show');speak(msg);
+  if(navigator.vibrate)navigator.vibrate([200,100,200]);
+}
+function closeToast(e){if(e&&e.target!==e.currentTarget)return;document.getElementById('toast').classList.remove('show')}
+
+function render(){
+  CATS.forEach(cat=>{
+    const list=document.getElementById('list-'+cat);const ct=tasks.filter(t=>t.category===cat);
+    document.getElementById('count-'+cat).textContent=ct.length;
+    if(!ct.length){list.innerHTML='<div class="empty-state">Sin pendientes</div>';return}
+    list.innerHTML=ct.map(t=>{const ab=t.alarmId?'<span class="alarm-badge">Alarma</span>':'';return '<div class="item"><div class="meta"><span class="time">'+t.time+'</span>'+ab+'</div><span class="text">'+esc(t.text)+'</span><div class="item-actions"><button class="btn-done" onclick="completeTask('+t.id+')" title="Listo">&#x2713;</button><button class="btn-delete" onclick="deleteTask('+t.id+')" title="Eliminar">&times;</button></div></div>'}).join('');
+  });
+  document.getElementById('count-completed').textContent=completed.length;
+  const cl=document.getElementById('completedList');
+  if(!completed.length){cl.innerHTML='<div class="empty-state">Nada completado</div>'}
+  else{cl.innerHTML=completed.map(t=>'<div class="completed-item"><span class="cat-tag tag-'+t.category+'">'+CAT_L[t.category]+'</span><span style="flex:1">'+esc(t.text)+'</span><span style="font-size:.6rem">'+(t.completedAt||'')+'</span><button class="btn-undo" onclick="undoTask('+t.id+')" title="Restaurar">&#x21A9;</button></div>').join('')}
+  const total=tasks.length;const bar=document.getElementById('statusBar');
+  if(!total&&!completed.length)bar.textContent='Sin pendientes';else if(!total)bar.textContent=completed.length+' completados';else bar.textContent=total+' pendiente'+(total>1?'s':'')+' | '+completed.length+' completado'+(completed.length!==1?'s':'');
+  renderAlarms();
+}
+
+function renderAlarms(){
+  const nowMs=Date.now();const fa=alarms.filter(a=>!a.triggered&&new Date(a.datetime).getTime()>nowMs);const sec=document.getElementById('alarmsSection');
+  if(!fa.length){sec.style.display='none';return}
+  sec.style.display='block';document.getElementById('alarmsCount').textContent=fa.length;
+  document.getElementById('alarmsList').innerHTML=fa.map(a=>{const dt=new Date(a.datetime);const diff=dt.getTime()-nowMs;const mins=Math.floor(diff/60000);const hrs=Math.floor(mins/60);const rm=mins%60;const cd=hrs>0?hrs+'h '+rm+'m':mins+' min';return '<div class="alarm-card"><div class="alarm-icon">&#x23F0;</div><div class="alarm-info"><div class="alarm-text">'+esc(a.text)+'</div><div class="alarm-datetime">'+dt.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'})+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')+'</div><div class="alarm-cat">'+CAT_L[a.category]+'</div></div><div class="alarm-countdown">'+cd+'</div><button class="btn-cancel-alarm" onclick="cancelAlarm('+a.id+')">X</button></div>'}).join('');
+}
+
+function esc(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}
+function toggleCompleted(){completedOpen=!completedOpen;document.getElementById('completedList').classList.toggle('show',completedOpen);document.getElementById('arrow').classList.toggle('open',completedOpen)}
+function resetAll(){if(!confirm('Borrar todo?'))return;tasks=[];completed=[];alarms=[];save();render();resetTimer();syncSW();speak('Todo borrado')}
+
+function toggleAlarmFields(){
+  const show=document.getElementById('alarmCheck').checked;document.getElementById('alarmFields').classList.toggle('show',show);
+  if(show){const d=document.getElementById('alarmDate');const t=document.getElementById('alarmTime');if(!d.value){const n=new Date();d.value=n.toISOString().split('T')[0];t.value=String(n.getHours()).padStart(2,'0')+':'+String(Math.min(n.getMinutes()+5,59)).padStart(2,'0')}updateAlarmPreview()}
+}
+function updateAlarmPreview(){const d=document.getElementById('alarmDate').value;const t=document.getElementById('alarmTime').value;if(d&&t){const dt=new Date(d+'T'+t);document.getElementById('alarmPreview').textContent=dt.toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'})+' '+t}}
+document.getElementById('alarmDate').addEventListener('change',updateAlarmPreview);document.getElementById('alarmTime').addEventListener('change',updateAlarmPreview);
+
+function toggleVoice(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){document.getElementById('micStatus').textContent='Usa Chrome para voz';return}
+  if(isRecording){recognition.stop();return}
+  recognition=new SR();recognition.lang='es-ES';recognition.continuous=false;recognition.interimResults=true;
+  recognition.onstart=()=>{isRecording=true;document.getElementById('micBtn').classList.add('recording');document.getElementById('micStatus').textContent='Escuchando...';document.getElementById('micStatus').className='mic-status listening'};
+  recognition.onresult=(e)=>{let transcript='';for(let i=e.resultIndex;i<e.results.length;i++)transcript+=e.results[i][0].transcript;document.getElementById('micStatus').textContent='"'+transcript+'"';document.getElementById('micStatus').className='mic-status transcript';if(e.results[e.results.length-1].isFinal){const f=transcript.trim().toLowerCase();if(f==='listo'||f.startsWith('listo')){completeAllFromCategory(document.getElementById('categorySelect').value)}else if(/^(agregar|nuevo|nueva)\s/.test(f)){document.getElementById('taskInput').value=transcript.trim().replace(/^(agregar|nuevo|nueva)\s+/i,'');addTask()}else{document.getElementById('taskInput').value=transcript.trim();addTask()}}};
+  recognition.onend=()=>{isRecording=false;document.getElementById('micBtn').classList.remove('recording');setTimeout(()=>{document.getElementById('micStatus').textContent='Toca el microfono para empezar';document.getElementById('micStatus').className='mic-status'},1200)};
+  recognition.onerror=()=>{isRecording=false;document.getElementById('micBtn').classList.remove('recording');document.getElementById('micStatus').textContent='Error. Toca para reintentar';document.getElementById('micStatus').className='mic-status'};
+  recognition.start();
+}
+
+function speak(text){
+  if(!('speechSynthesis' in window))return;try{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='es-ES';u.rate=1.05;window.speechSynthesis.speak(u)}catch(e){}
+}
+
+render();
+startTimer();
+</script>
+</body>
+</html>
