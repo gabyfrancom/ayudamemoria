@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ayuda Memoria</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+  
+  header { background: linear-gradient(135deg, #1e293b, #334155); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #475569; position: sticky; top: 0; z-index: 100; }
+  header h1 { font-size: 1.3rem; font-weight: 700; }
+  header h1 span { color: #38bdf8; }
+  .header-controls { display: flex; gap: 10px; align-items: center; }
+  .timer-badge { background: #1e293b; border: 1px solid #475569; border-radius: 20px; padding: 4px 12px; font-size: 0.8rem; color: #94a3b8; }
+  .timer-badge.active { border-color: #22c55e; color: #22c55e; }
+  .btn-reset { background: none; border: 1px solid #ef4444; color: #ef4444; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.75rem; }
+  .btn-reset:hover { background: #ef4444; color: #fff; }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+  .input-section { background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 20px; border: 1px solid #334155; }
+  .input-row { display: flex; gap: 10px; }
+  .input-row input { flex: 1; background: #0f172a; border: 1px solid #475569; border-radius: 8px; padding: 10px 14px; color: #e2e8f0; font-size: 0.95rem; outline: none; }
+  .input-row input:focus { border-color: #38bdf8; }
+  .input-row select { background: #0f172a; border: 1px solid #475569; border-radius: 8px; padding: 10px; color: #e2e8f0; font-size: 0.9rem; outline: none; cursor: pointer; }
+  .btn-add { background: #38bdf8; color: #0f172a; border: none; border-radius: 8px; padding: 10px 18px; font-weight: 700; cursor: pointer; font-size: 0.9rem; white-space: nowrap; }
+  .btn-add:hover { background: #7dd3fc; }
+  .btn-voice { background: #ef4444; color: #fff; border: none; border-radius: 8px; padding: 10px 14px; cursor: pointer; font-size: 1rem; width: 44px; display: flex; align-items: center; justify-content: center; }
+  .btn-voice:hover { background: #dc2626; }
+  .btn-voice.recording { animation: pulse 1s infinite; background: #dc2626; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
+  .quick-add { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .quick-add span { font-size: 0.8rem; color: #64748b; padding-top: 4px; }
+
+  .categories { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .categories { grid-template-columns: 1fr; } .input-row { flex-wrap: wrap; } }
+
+  .category { background: #1e293b; border-radius: 12px; overflow: hidden; border: 1px solid #334155; }
+  .cat-header { padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; font-weight: 700; font-size: 0.95rem; }
+  .cat-header .icon { margin-right: 8px; }
+  .cat-header .count { background: #334155; border-radius: 12px; padding: 2px 10px; font-size: 0.75rem; font-weight: 600; }
+  .cat-body { padding: 0 12px 12px; min-height: 40px; max-height: 300px; overflow-y: auto; }
+  .cat-body::-webkit-scrollbar { width: 4px; }
+  .cat-body::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+
+  .cat-pedidos .cat-header { border-left: 3px solid #f59e0b; }
+  .cat-mails .cat-header { border-left: 3px solid #3b82f6; }
+  .cat-llamadas .cat-header { border-left: 3px solid #a855f7; }
+  .cat-pendientes .cat-header { border-left: 3px solid #ef4444; }
+
+  .item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #0f172a; border-radius: 8px; margin-bottom: 6px; transition: all 0.2s; }
+  .item:hover { background: #1a2744; }
+  .item .text { flex: 1; font-size: 0.9rem; word-break: break-word; }
+  .item .time { font-size: 0.7rem; color: #64748b; white-space: nowrap; }
+  .item .btn-done { background: #22c55e; color: #fff; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.75rem; font-weight: 600; }
+  .item .btn-done:hover { background: #16a34a; }
+  .item .btn-delete { background: none; border: none; color: #64748b; cursor: pointer; font-size: 1rem; padding: 2px 4px; }
+  .item .btn-delete:hover { color: #ef4444; }
+
+  .completed-section { margin-top: 24px; }
+  .completed-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 10px 0; }
+  .completed-header h3 { font-size: 0.95rem; color: #64748b; }
+  .completed-header .arrow { transition: transform 0.2s; color: #64748b; }
+  .completed-header .arrow.open { transform: rotate(180deg); }
+  .completed-list { display: none; }
+  .completed-list.show { display: block; }
+  .completed-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; font-size: 0.85rem; color: #64748b; text-decoration: line-through; }
+  .completed-item .cat-tag { font-size: 0.65rem; padding: 1px 6px; border-radius: 4px; text-transform: uppercase; font-weight: 700; }
+  .tag-pedidos { background: #78350f; color: #fbbf24; }
+  .tag-mails { background: #1e3a5f; color: #60a5fa; }
+  .tag-llamadas { background: #3b0764; color: #c084fc; }
+  .tag-pendientes { background: #7f1d1d; color: #fca5a5; }
+  .completed-item .btn-undo { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 0.8rem; }
+  .completed-item .btn-undo:hover { color: #38bdf8; }
+
+  .empty-state { text-align: center; padding: 16px; color: #475569; font-size: 0.85rem; }
+
+  .notification-toast { position: fixed; top: 80px; right: 20px; background: #1e293b; border: 1px solid #f59e0b; border-radius: 12px; padding: 16px 20px; max-width: 350px; z-index: 200; box-shadow: 0 8px 32px rgba(0,0,0,0.4); display: none; }
+  .notification-toast.show { display: block; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+  .notification-toast h4 { color: #f59e0b; margin-bottom: 8px; font-size: 0.9rem; }
+  .notification-toast ul { list-style: none; padding: 0; }
+  .notification-toast li { padding: 3px 0; font-size: 0.85rem; }
+  .notification-toast .close-toast { position: absolute; top: 8px; right: 12px; background: none; border: none; color: #64748b; cursor: pointer; font-size: 1.1rem; }
+
+  .status-bar { text-align: center; padding: 8px; color: #475569; font-size: 0.75rem; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>&#x1F4CB; Ayuda <span>Memoria</span></h1>
+  <div class="header-controls">
+    <span class="timer-badge active" id="timerBadge">&#x23F0; Recordatorio: 10:00</span>
+    <button class="btn-reset" onclick="resetAll()" title="Borrar todo">&#x1F5D1; Limpiar</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="input-section">
+    <div class="input-row">
+      <select id="categorySelect">
+        <option value="pedidos">&#x1F4E6; Pedidos</option>
+        <option value="mails">&#x1F4E7; Mails</option>
+        <option value="llamadas">&#x1F4DE; Llamadas</option>
+        <option value="pendientes">&#x26A0;&#xFE0F; Pendientes</option>
+      </select>
+      <input type="text" id="taskInput" placeholder="Escribe tu pendiente..." onkeydown="if(event.key==='Enter') addTask()">
+      <button class="btn-voice" id="voiceBtn" onclick="toggleVoice()" title="Hablar">&#x1F3A4;</button>
+      <button class="btn-add" onclick="addTask()">Agregar</button>
+    </div>
+  </div>
+
+  <div class="categories">
+    <div class="category cat-pedidos">
+      <div class="cat-header">
+        <span><span class="icon">&#x1F4E6;</span> Pedidos</span>
+        <span class="count" id="count-pedidos">0</span>
+      </div>
+      <div class="cat-body" id="list-pedidos"></div>
+    </div>
+    <div class="category cat-mails">
+      <div class="cat-header">
+        <span><span class="icon">&#x1F4E7;</span> Mails</span>
+        <span class="count" id="count-mails">0</span>
+      </div>
+      <div class="cat-body" id="list-mails"></div>
+    </div>
+    <div class="category cat-llamadas">
+      <div class="cat-header">
+        <span><span class="icon">&#x1F4DE;</span> Llamadas</span>
+        <span class="count" id="count-llamadas">0</span>
+      </div>
+      <div class="cat-body" id="list-llamadas"></div>
+    </div>
+    <div class="category cat-pendientes">
+      <div class="cat-header">
+        <span><span class="icon">&#x26A0;&#xFE0F;</span> Pendientes</span>
+        <span class="count" id="count-pendientes">0</span>
+      </div>
+      <div class="cat-body" id="list-pendientes"></div>
+    </div>
+  </div>
+
+  <div class="completed-section">
+    <div class="completed-header" onclick="toggleCompleted()">
+      <h3>&#x2705; Realizados (<span id="count-completed">0</span>)</h3>
+      <span class="arrow" id="arrow">&#x25BC;</span>
+    </div>
+    <div class="completed-list" id="completedList"></div>
+  </div>
+
+  <div class="status-bar" id="statusBar">Sin pendientes. todo listo.</div>
+</div>
+
+<div class="notification-toast" id="toast">
+  <button class="close-toast" onclick="closeToast()">&times;</button>
+  <h4>&#x1F514; Recordatorio pendientes</h4>
+  <ul id="toastList"></ul>
+</div>
+
+<script>
+const CATEGORIES = ['pedidos','mails','llamadas','pendientes'];
+const CAT_LABELS = { pedidos:'Pedidos', mails:'Mails', llamadas:'Llamadas', pendientes:'Pendientes' };
+const CAT_ICONS = { pedidos:'\u{1F4E6}', mails:'\u{1F4E7}', llamadas:'\u{1F4DE}', pendientes:'\u26A0\uFE0F' };
+
+let tasks = JSON.parse(localStorage.getItem('ayudaMemoria_tasks') || '[]');
+let completed = JSON.parse(localStorage.getItem('ayudaMemoria_completed') || '[]');
+let timerSeconds = 600;
+let timerInterval = null;
+let completedOpen = false;
+let recognition = null;
+let isRecording = false;
+
+function save() {
+  localStorage.setItem('ayudaMemoria_tasks', JSON.stringify(tasks));
+  localStorage.setItem('ayudaMemoria_completed', JSON.stringify(completed));
+}
+
+function addTask() {
+  const input = document.getElementById('taskInput');
+  const cat = document.getElementById('categorySelect').value;
+  const text = input.value.trim();
+  if (!text) return;
+
+  if (text.toLowerCase() === 'listo') {
+    completeAllFromCategory(cat);
+    input.value = '';
+    return;
+  }
+
+  tasks.push({ id: Date.now(), text, category: cat, time: new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) });
+  input.value = '';
+  save();
+  render();
+  resetTimer();
+  speak(CAT_ICONS[cat] + ' ' + text + ' agregado a ' + CAT_LABELS[cat]);
+}
+
+function completeTask(id) {
+  const idx = tasks.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  const task = tasks.splice(idx, 1)[0];
+  completed.unshift({ ...task, completedAt: new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) });
+  save();
+  render();
+  speak('Listo: ' + task.text);
+}
+
+function undoTask(id) {
+  const idx = completed.findIndex(t => t.id === id);
+  if (idx === -1) return;
+  const task = completed.splice(idx, 1)[0];
+  delete task.completedAt;
+  tasks.push(task);
+  save();
+  render();
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  save();
+  render();
+}
+
+function completeAllFromCategory(cat) {
+  const catTasks = tasks.filter(t => t.category === cat);
+  if (catTasks.length === 0) { speak('No hay ' + CAT_LABELS[cat] + ' pendientes'); return; }
+  catTasks.forEach(t => {
+    completed.unshift({ ...t, completedAt: new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}) });
+  });
+  tasks = tasks.filter(t => t.category !== cat);
+  save();
+  render();
+  speak(catTasks.length + ' ' + CAT_LABELS[cat] + ' marcados como listos');
+}
+
+function render() {
+  CATEGORIES.forEach(cat => {
+    const list = document.getElementById('list-' + cat);
+    const catTasks = tasks.filter(t => t.category === cat);
+    document.getElementById('count-' + cat).textContent = catTasks.length;
+    if (catTasks.length === 0) {
+      list.innerHTML = '<div class="empty-state">Sin pendientes</div>';
+    } else {
+      list.innerHTML = catTasks.map(t => `
+        <div class="item">
+          <span class="text">${escapeHtml(t.text)}</span>
+          <span class="time">${t.time}</span>
+          <button class="btn-done" onclick="completeTask(${t.id})">Listo</button>
+          <button class="btn-delete" onclick="deleteTask(${t.id})" title="Eliminar">&times;</button>
+        </div>
+      `).join('');
+    }
+  });
+
+  document.getElementById('count-completed').textContent = completed.length;
+  const compList = document.getElementById('completedList');
+  if (completed.length === 0) {
+    compList.innerHTML = '<div class="empty-state">Nada completado a&uacute;n</div>';
+  } else {
+    compList.innerHTML = completed.map(t => `
+      <div class="completed-item">
+        <span class="cat-tag tag-${t.category}">${CAT_LABELS[t.category]}</span>
+        <span style="flex:1">${escapeHtml(t.text)}</span>
+        <span style="font-size:0.7rem">${t.completedAt || ''}</span>
+        <button class="btn-undo" onclick="undoTask(${t.id})" title="Restaurar">&#x21A9;</button>
+      </div>
+    `).join('');
+  }
+
+  const total = tasks.length;
+  const bar = document.getElementById('statusBar');
+  if (total === 0 && completed.length === 0) {
+    bar.textContent = 'Sin pendientes. todo listo.';
+  } else if (total === 0) {
+    bar.textContent = completed.length + ' completados. todo listo! &#x1F389;';
+  } else {
+    bar.textContent = total + ' pendiente' + (total > 1 ? 's' : '') + ' | ' + completed.length + ' completado' + (completed.length !== 1 ? 's' : '');
+  }
+}
+
+function escapeHtml(t) {
+  const d = document.createElement('div');
+  d.textContent = t;
+  return d.innerHTML;
+}
+
+function toggleCompleted() {
+  completedOpen = !completedOpen;
+  document.getElementById('completedList').classList.toggle('show', completedOpen);
+  document.getElementById('arrow').classList.toggle('open', completedOpen);
+}
+
+function resetAll() {
+  if (!confirm('Borrar todo el historial?')) return;
+  tasks = [];
+  completed = [];
+  save();
+  render();
+  resetTimer();
+  speak('Todo borrado');
+}
+
+function resetTimer() {
+  timerSeconds = 600;
+  updateTimerBadge();
+}
+
+function updateTimerBadge() {
+  const m = Math.floor(timerSeconds / 60);
+  const s = timerSeconds % 60;
+  const badge = document.getElementById('timerBadge');
+  badge.textContent = '\u23F0 Recordatorio: ' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timerSeconds--;
+    updateTimerBadge();
+    if (timerSeconds <= 0) {
+      triggerReminder();
+      timerSeconds = 600;
+    }
+  }, 1000);
+}
+
+function triggerReminder() {
+  if (tasks.length === 0) {
+    speak('No hay pendientes. Todo listo.');
+    return;
+  }
+
+  const toast = document.getElementById('toast');
+  const toastList = document.getElementById('toastList');
+
+  const byCat = {};
+  CATEGORIES.forEach(c => { byCat[c] = tasks.filter(t => t.category === c); });
+
+  let msg = 'Tienes ' + tasks.length + ' pendiente' + (tasks.length > 1 ? 's' : '') + ': ';
+  let items = '';
+  CATEGORIES.forEach(cat => {
+    if (byCat[cat].length > 0) {
+      items += '<li><strong>' + CAT_ICONS[cat] + ' ' + CAT_LABELS[cat] + ' (' + byCat[cat].length + '):</strong></li>';
+      byCat[cat].forEach(t => {
+        items += '<li style="padding-left:24px">' + escapeHtml(t.text) + '</li>';
+        msg += CAT_LABELS[cat] + ': ' + t.text + '. ';
+      });
+    }
+  });
+
+  toastList.innerHTML = items;
+  toast.classList.add('show');
+  speak(msg);
+  try { new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdH+JkI2Gf3V1goqOjYmFf3d4goqOjYmFf3h5hIqPjYmGfnh5hIqPjYmGfnh6hoqQjYmGfnh6hoyRjYmGf3l6h4ySjYqHf3l7h4ySjYqHgHp7h4ySjYqIgHt8iI2TjYqIgHt8iI2TjYqJgHx9iY6UjYqJgHx9iY6UjYqJgH1+io+VjouKgH1+io+VjouKgH1/io+VjouKgH2AipCWj4uKgH2AipCWj4uLgH6BipGXkIuLgH6BipGXkIyMgH+BipKXkYyMgH+BipKXkYyNgH+BipKYko2NgH+BipKYko2NgH+BipKZko2NgH+BipKZko6OgH+CipKZko6OgH+CipKZko6OgH+Ei5Oako6OgH+Ei5Oako+PgH+Ei5OalI+QgH+Ei5OalI+QgH+Fi5SalI+QgH+Fi5SalI+RgH+Fi5SblI+RgH+Fi5SblI+RgH+Gi5WblI+RgH+Gi5WblZCSgH+Gi5WblZCSgH+Hi5WblZCTh4CIjJacmJGUh4CIjJacmJGUh4CJjZedmpGVh4CJjZedmpGVh4CKjpifnJOWiICKjpmfnJOWiICKjpqgnZSXiYCJjpqfnZSYioGKj5ugnpWYioGKj5yhn5aZi4GLkJ2in5eajIGLkJ6jn5eajIGMkZ+kn5iZjYGMkZ+kn5iZjYGNkqCmn5majYGNkqCmn5majYGOlKGnn5majYGOlKGnn5qcgY6WoqeenJqcgY6WoqeenZyeg4+XpKqfnZyeg4+XpKqfnp2fhI+Ypqugnp2fhI+Ypqugnp6ghJCZp6yhnp6ghJCZp6yhnp+hhZGaqK2in5+hhZGaqK2in5+ihpKbqa6in5+ihpKbqa6joKCjh5Ocq7Cin6Cjh5Ocq7Cin6Gkh5WdrbGin6Gkh5WdrbKioaKliJadrbKioaKliJadr7OioqOmiZqer7OioqOmiZqfr7Sio6Snipqfr7Sio6SnipqgsLWjpKWpi5ygsLWjpKWpi5yhtLakpaepjZ+htLakpaeqjqCjtbimpqiqj6Cjtbimpqiqj6GktraopqeqlKGktrqoqKeqlqKmtrypqaerl6Omtrypqaerl6Sot7yqqaiqmKSox7yqqaiqmKWpyL2rqqirmaWpyL2rqqirmaapyr6srKmrmqapy7+trKmrm6eryL+uramrnKeryL+uramrnaeszMGvrqqsnaeszMGvrqqtobCwr6qsn6Owraa1ta61ta62uLGyt7K0t7GzubO1ubW2ura3t7e4uLe4ubm5ubq5ubq6ubq6ubq6ubq6ubq6ubu7u7u7u7u7u7u7u7u7u7u7vLy8vLy9vb29vb6+vr6+v7+/v7+/v7+/v7/AwMDAwMHBwcHBwsLCwsLCw8PDw8PExMTExMXFxcXFxcbGxsbGx8fHx8fIyMjIyMnJycnJysrKysrLy8vLy8zMzMzMysrKysrNzc3Nzc7Ozs7Oz8/Pz8/Q0NDQ0MvLy8vLzMzMzMzPz8/P0NDQ0NDNzc3Nzc/Pz8/P0dHR0dHOzs7OztDQ0NDR0dHR0dHS0tLS0tPT09PT09PT09PT09PT1NTU1NTV1dXV1dbW1tbW19fX19fY2NjY2M3Nzc3N0NDQ0NDR0dHR0tLS0tLS0tPT09PT1NTU1NTW1tbW1tbW1tbX19fX19jY2NjYzc3Nzc3Q0NDQ0NHR0dHS0tLS0tLS09PT09PU1NTU1NbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09TU1NTU1tbW1tbW1tbW19fX19fY2NjY2M3Nzc3N0NDQ0NDR0dHR0tLS0tLS09PT09PU1NTU1NbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09TU1NTU1tbW1tbW1tbW19fX19fY2NjY2M3Nzc3N0NDQ0NDR0dHR0tLS0tLS09PT09PU1NTU1NbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09TU1NTU1tbW1tbW1tbW1tfX19fX2NjY2NjNzc3NzdDQ0NDQ0dHR0dLS0tLS0tLT09PT09P', 'audio/wav').play().catch(()=>{}); } catch(e) {}
+}
+
+function closeToast() {
+  document.getElementById('toast').classList.remove('show');
+}
+
+function speak(text) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'es-ES';
+    u.rate = 1.1;
+    window.speechSynthesis.speak(u);
+  }
+}
+
+function toggleVoice() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { alert('Tu navegador no soporta reconocimiento de voz. Usa Chrome.'); return; }
+
+  if (isRecording) {
+    recognition.stop();
+    isRecording = false;
+    document.getElementById('voiceBtn').classList.remove('recording');
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.lang = 'es-ES';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onstart = () => {
+    isRecording = true;
+    document.getElementById('voiceBtn').classList.add('recording');
+  };
+
+  recognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript.trim().toLowerCase();
+    if (transcript === 'listo' || transcript.startsWith('listo')) {
+      const cat = document.getElementById('categorySelect').value;
+      completeAllFromCategory(cat);
+    } else if (transcript.startsWith('agregar ') || transcript.startsWith('nuevo ') || transcript.startsWith('nueva ')) {
+      const cleaned = transcript.replace(/^(agregar|nuevo|nueva)\s+/i, '');
+      document.getElementById('taskInput').value = cleaned;
+      addTask();
+    } else {
+      document.getElementById('taskInput').value = transcript;
+      addTask();
+    }
+  };
+
+  recognition.onend = () => {
+    isRecording = false;
+    document.getElementById('voiceBtn').classList.remove('recording');
+  };
+
+  recognition.onerror = (e) => {
+    isRecording = false;
+    document.getElementById('voiceBtn').classList.remove('recording');
+  };
+
+  recognition.start();
+}
+
+render();
+startTimer();
+
+if ('Notification' in window && Notification.permission === 'default') {
+  Notification.requestPermission();
+}
+</script>
+</body>
+</html>
