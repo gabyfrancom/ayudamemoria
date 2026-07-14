@@ -1,0 +1,111 @@
+// ===== TIMESTAMP-BASED TIMER =====
+// Ya no usa Web Worker (muere en background).
+// Usa timestamp absoluto guardado en localStorage.
+function getTimerState() {
+  const t = JSON.parse(localStorage.getItem('am_ts') || '{"remaining":600,"startAt":0}');
+  if (!t.startAt) t.startAt = Date.now();
+  return t;
+}
+function saveTimerState(remaining) {
+  localStorage.setItem('am_ts', JSON.stringify({ remaining, startAt: Date.now() }));
+}
+
+let remaining = 600;
+let timerStartAt = Date.now();
+let timerInterval = null;
+
+function startTimer() {
+  // Intentar recuperar estado previo
+  const ts = getTimerState();
+  const elapsed = Math.floor((Date.now() - ts.startAt) / 1000);
+  remaining = Math.max(0, ts.remaining - elapsed);
+  
+  if (remaining <= 0) {
+    // Se perdió un recordatorio mientras no se usaba la app
+    remaining = 0;
+  }
+  
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    remaining--;
+    saveTimerState(remaining);
+    updateTimerBadge();
+    if (remaining <= 0) {
+      triggerReminder();
+      remaining = 600;
+      saveTimerState(remaining);
+    }
+  }, 1000);
+  
+  requestWakeLock();
+  syncSW();
+}
+
+function resetTimer() {
+  remaining = 600;
+  timerStartAt = Date.now();
+  saveTimerState(remaining);
+  updateTimerBadge();
+  syncSW();
+}
+
+function updateTimerBadge() {
+  const m = Math.floor(remaining / 60);
+  const s = remaining % 60;
+  document.getElementById('timerText').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+
+function syncSW() {
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: 'sync',
+      startAt: timerStartAt,
+      alarms: alarms
+    });
+  }
+}
+
+// ===== WAKE LOCK =====
+let wakeLock = null;
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    }
+  } catch(e) {}
+}
+
+// ===== CATCH-UP AL VOLVER DE PANTALLA APAGADA =====
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    const ts = getTimerState();
+    const elapsed = Math.floor((Date.now() - ts.startAt) / 1000);
+    if (ts.remaining - elapsed <= 0 && remaining > 0) {
+      // Se perdió un recordatorio mientras no se veía la app
+      triggerReminder();
+      remaining = 600 - Math.abs(ts.remaining - elapsed) % 600;
+      saveTimerState(remaining);
+      updateTimerBadge();
+    } else {
+      remaining = Math.max(0, ts.remaining - elapsed);
+      saveTimerState(remaining);
+      updateTimerBadge();
+    }
+    requestWakeLock();
+    renderAlarms();
+    syncSW();
+  }
+});
+
+// ===== SW MESSAGES =====
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'reminder') {
+      triggerReminder();
+    } else if (e.data && e.data.type === 'alarm') {
+      const alarm = e.data.alarm;
+      if (alarm) triggerAlarmRing(alarm);
+    }
+  });
+}
